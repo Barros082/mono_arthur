@@ -5,28 +5,955 @@ date: "29/01/2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 
+# **Contextualizando**
+
+Olá, me chamo Arthur Barros e vou apresentar as análises do artigo criado por mim e pelo Dr. Felipe Melo, docente da Universidade Federal de Pernambuco - UFPE.
+
+Esse trabalho foi baseado no artigo Forest fragmentation reduces recruitment of large-seeded tree species
+in a semi-deciduous tropical forest of southern Mexico, publicado no ano de 2010 na Journal of Tropical Ecology. Confira [aqui.](https://www.cambridge.org/core/product/identifier/S0266467409990435/type/journal_article)` 
+
+Fizemos uma releitura dos dados de chuva de sementes de Melo et al., (2010), questionando: i) Se existe o mesmo padrão entre os fragmentos e o ano nos três níveis de diversidade, ii) Se a superprodução de sementes interfere significativamente na diversidade dos fragmentos, iii) Qual o padrão da acumulação de espécies entre os fragmentos. As hipóteses são i) Que existe o mesmo padrão para as espécies abundantes e raras quanto ao ano, mas não quanto ao fragmento, ii) Há uma relação positiva e significante entre a superprodução e a diversidade das sementes, iii) Que o acumulo é mais rápido nos menores fragmentos. 
+
+Para as análises, utilizou-se esses pacotes:
+```{r Pacotes, warning=FALSE, echo=TRUE,  message=FALSE}
+
+library(tidyverse)
+library(vegan)
+library(BiodiversityR)
+library(entropart)
+library(gridExtra)
+library(nlme)
+library(rmarkdown)
+library(knitr)
+library(cowplot)
+library(ggpubr)
+```
+
+# **Análises descritivas**
+
+A finalidade é conhecer melhor os dados e valores gerais sobre a chuva de sementes. Utilizou-se os dados presentes na tabela de amostras
+
+```{r Seed_rain, echo=FALSE, message=FALSE, warning=FALSE}
+seed_rain <- read_delim("Bases_de_dados/base_geral_atualizada2.csv",
+                        ";", escape_double = FALSE, trim_ws = TRUE)
+
+seed_rain %>% 
+  drop_na() -> seed_rain #Retirando os NA's
+
+paged_table(seed_rain)
+```
+
+Como se trata de análises descritivas, a base de dados não foi submetida a nenhum tipo de tratamento e/ou organização no Excel/Calc, sendo apresentado acima o resultado do que foi realizado com o fim da coleta dos dados em campo.
+
+## Número de sementes
+```{r Número de sementes,  message=FALSE, collapse=TRUE}
+seed_rain %>% 
+  group_by(habit) %>% 
+  summarise(number.of.seeds = sum (abund))
+
+sum(seed_rain$abund) 
+```
+
+## Distribuição das sementes por ano
+```{r seed_yr, message=FALSE, collapse=TRUE}
+seed_rain %>% 
+  group_by(yr) %>%
+  summarise(sum(abund)) 
+
+print(Per_sem_ano <- 13217*100/16502)
 
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+## Distribuição das sementes por fragmento
+```{r seed_frag, message=FALSE, collapse=TRUE}
+seed_rain %>%
+  select(abund, frag_cat)%>%
+  group_by(frag_cat) %>%
+  summarise(number_of_seeds = sum(abund))  
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+## Número de espécies
+```{r spp, message=FALSE, collapse=TRUE}
+seed_rain %>% 
+  select(id_real) %>% 
+  distinct(.keep_all = F) %>% 
+  summarise(number_of_species = sum(!is.na(id_real))) 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Distribuição das espécies por ano
+Aqui é interessante ressaltar que as espécies estavam repetidas para o ano de 2007, contando a mesma espécie do ano anterior. Só obtivemos 2 espécies diferentes no ano de 2007 que foram: *Spp1* e *Spp2* 
+
+```{r spp_yr, message=FALSE, collapse=TRUE}
+seed_rain %>% 
+  filter(abund>0 & yr == "2006") %>% 
+  select(id_real, yr) %>%
+  group_by(yr) %>% 
+  distinct(.keep_all = F) %>% 
+  summarise(number_of_species = sum(!is.na(id_real)))
+
+print(Per_spps_ano <- 41*100/43)
+
+```
+
+## Quantidade de espécies abióticas e zoocóricas nos dois anos de experimento
+```{r spp_disp, message=FALSE, collapse=TRUE}
+seed_rain %>%
+  filter(abund>0) %>% #Isso e para que só contar as espécies que tiveram uma aparição no ano em questão e não todas as espécies presentes na planilha
+  select(id_real, disp_mode, yr) %>%
+  group_by(disp_mode, yr) %>% 
+  distinct(.keep_all = F)%>% 
+  summarise(number_of_species = sum(!is.na(id_real)))
+
+print(Per_spps_abio_2006 <- 9*100/41)
+print(Per_spps_abio_2007 <- 7*100/29)
+```
+
+## Quantidade de espécies locais e dispersadas nos dois anos de experimento
+```{r spp_origem, message=FALSE, collapse=TRUE}
+seed_rain %>%
+  filter(abund>0) %>% 
+  select(id_real, origen, yr) %>%
+  group_by(origen, yr) %>% 
+  distinct(.keep_all = F)%>% #Vale destacar que aqui a espécie pode ser imigrante em uma parcela e local em outra
+  summarise(number_of_species = sum(!is.na(id_real)))
+```
+
+Como ressaltado no comentário do script, para a origem não é necessário essa divisão. Esse método de estimar a origem da semente foi construído por Webb & Peart, 2001, consulte o artigo [aqui](http://doi.wiley.com/10.1046/j.1461-0248.2001.00252.x). Por fim, é importante ressaltar que essa dupla classificação é uma das lacunas do método.  
+
+## Quantidade de espécies nos dois anos de experimento pelo tamanho do fragmento
+```{r spp_frag, message=FALSE, collapse=TRUE}
+seed_rain %>%
+  filter(abund>0) %>% 
+  select(id_real, frag_cat, yr) %>%
+  group_by(frag_cat, yr) %>% 
+  distinct(.keep_all = F)%>%
+  summarise(number_of_species = sum(!is.na(id_real)))
+```
+
+# **Análises**
+
+*Aqui começa a brincadeira!!*
+
+Buscou-se realizar o método de ordenação NMDS (Escalonamento Multidimensional Não Métrico) para entender melhor a organização dos dados. Em sequência, foi gerada as diversidades e os gráficos descritivos que possibilitaram maior visualização do conjunto de informações. Criou-se um modelo linear generalizado buscando relacionar as variáveis independentes (ano, tamanho de fragmento, tipo de dispersão e origem) com nossas variáveis respostas (diversidade 0, 1 e 2). E por fim, realizou-se uma análise gráfica comparando as curvas de acumulação das espécies pela área amostrada, objetivando identificar em qual ordem dos fragmentos as espécies são acumuladas mais rápidas.  
+
+Antes disso tudo, é preciso organizar a nossa tabela e criar a tabela de comunidade. Para isso, foi preciso modificar a planilha de dados no Calc/Excel. Aqui embaixo vou mostrar a diferença entre as duas tabelas:
+
+```{r Planilhas, message=FALSE, cache=TRUE}
+seed_rain <- read_delim("Bases_de_dados/base_geral_atualizada2.csv",
+                        ";", escape_double = FALSE, trim_ws = TRUE)
+
+seed_rain %>% 
+  drop_na() -> seed_rain #Retirando os NA's 
+kable(head(seed_rain, 10))
+
+seed_rain2 <- read_csv("Bases_de_dados/seed_oficial.csv")
+seed_rain2 <- rename(seed_rain2, "disp_mode" = 'disp-mode')#Isso aqui é porque nomes como disp-mode, geralmente, costumam dar problemas para chamar no R. Dessa forma, optamos por trocar e colocar disp_mode para evitar esse  risco
+paged_table(seed_rain2)
+```
+
+A principal diferença entre elas é a organização. Na seed_rain, todas as espécies constituem a coluna id_real sendo cada linha correspondente a espécie presente no plot. Nessa planilha também tem informações como: identidade da planta, hábito, área do plot, que não serão usadas para criar a tabela de comunidade. Servem mais para que nós, autores, possamos saber o nome da espécie em questão no id_real, por exemplo. 
+
+Desse modo, seed_rain2 foi construído de forma mais organizada e completa. Acrescentamos nela duas modificações substancias. A primeira diz respeito a uma coluna para cada espécie (coluna 1, 5, etc), facilitando a criação da tabela de comunidade e a segunda, foi no sentido de completar todas as possíveis interações entre as variáveis independentes e os plots existentes. Ou seja, essa planilha tem exatamente *todos os tamanhos de sementes, tipos de dispersão, tipos de origem, tamanhos de fragmento e anos de experimento, vezes a quantidade de plots por site, no caso dos nossos dados, denominamos isso Site_Plot* $$3*2*2*4*2*10=960$$ 
+
+
+## Criando a tabela da comunidade
+
+Agora com a planilha de dados devidamente organizada, podemos criar a tabela de comunidade. Consiste basicamente nas nossas espécies como colunas, organizadas somente pelo site e o plot, ou seja, o local onde foram encontradas.
+
+```{r comm_tree2}
+comm_tree2 <- seed_rain2[,c(-1,-2,-4:-9)]
+comm_tree2 %>% 
+  group_by(site_plot) %>% 
+  summarise_if(is.numeric, sum) -> comm_tree2
+
+paged_table(comm_tree2)
+
+```
+
+## Criando a tabela da variáveis ambientais
+
+De forma simplificada, essa tabela é o complemento da tabela de comunidade e representa todas as possíveis interações entre as variávies independentes.
+
+```{r var_tree2}
+seed_rain2 %>% 
+  select(yr, frag_cat, site_plot, site, plot, origem, disp_mode, seed_size_cat)-> var_tree2
+paged_table(var_tree2)
+
+```
+
+## Escalonamento Multidimensional Não Métrico - NMDS
+
+Submetemos a tabela da comunidade ao NMDS e criamos o gráfico com o intuito de encontrar alguma correlação entre a chuva de sementes e os fragmentos. Esperávamos encontrar um agrupamento de sementes da mesma classe.
+
+```{r NMDS_fig, fig.show='asis',  echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
+NMDS <- metaMDS(comm_tree2[, -1], k=2, distance = "bray")
+
+#Tamanho dos Fragmentos
+NMDS_data <- data.frame(comm_tree2$site_plot, NMDS$points)
+NMDS_data$cat_frag <- c(rep("Control", 10), rep("Large", 10), rep("Medium", 10), rep("Small", 10))
+
+ggplot(NMDS_data, aes(MDS1, MDS2, color=cat_frag))+
+  geom_point(size=2)+
+  labs(color="Classe dos Fragmentos")
+
+```
+
+O resultado do gráfico demonstra que não há um agrupamento da chuva de sementes em relação as classes do fragmento. Isso se deve a influência das demais variáveis no conjunto de dados.
+
+## Gerando gráficos de diversidade
+Aqui vamos ter dois gráficos principais, o primeiro é a diversidade alfa sobre os fragmentos nos dois anos do experimento, enquanto o segundo é essa diversidade separada pelos anos e por fragmentos. Para cada gráfico foi criada uma Metacomunidade e calculada as diversidades dela. Isso porque a comunidade só com os fragmentos tem quatro tipos de fragmentos que multiplicam 10 site_plots, dando 40 locais para a Metacomunidade. No entanto, se considerarmos o ano, esse número deve ser multipicado pela quantidade de anos, no caso 2, mudando assim, a metacomunidade e seu cálculo.
+
+### *Fig1. Diversidade Alfa nas Quatro classes de Fragmentos*
+
+```{r Alfa_frag, fig.show='asis', collapse=TRUE, message=FALSE, warning=FALSE}
+MC <- MetaCommunity(t(comm_tree2[,-1]))
+
+#Calculando a diversidade alfa com todos os q para o método None
+alpha_none_0 <- AlphaDiversity(MC, 0, Correction = "None", Tree = NULL, Normalize = TRUE,
+                               CheckArguments = TRUE)
+alpha_none_1 <- AlphaDiversity(MC, 1, Correction = "None", Tree = NULL, Normalize = TRUE,
+                               CheckArguments = TRUE)
+alpha_none_2 <- AlphaDiversity(MC, 2, Correction = "None", Tree = NULL, Normalize = TRUE,
+                               CheckArguments = TRUE)
+
+#Calculando a diversidade alfa com todos os q para o método Best
+alpha_best_0 <- AlphaDiversity(MC, 0, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                               CheckArguments = TRUE)
+alpha_best_1 <- AlphaDiversity(MC, 1, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                               CheckArguments = TRUE)
+alpha_best_2 <- AlphaDiversity(MC, 2, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                               CheckArguments = TRUE)
+
+
+#Construindo a matriz Diversidades Alfa x Fragmentos.
+Div_Alfa <- data.frame(comm_tree2$site_plot, alpha_none_0$Communities, alpha_best_0$Communities, alpha_none_1$Communities, alpha_best_1$Communities, alpha_none_2$Communities, alpha_best_2$Communities)
+Div_Alfa <- rename(Div_Alfa,"Fragmentos" = comm_tree2.site_plot, "None_0" = alpha_none_0.Communities, "Best_0" = alpha_best_0.Communities, "None_1" = alpha_none_1.Communities, "Best_1" = alpha_best_1.Communities, "None_2"= alpha_none_2.Communities, "Best_2"= alpha_best_2.Communities)
+
+#Plotando o gráfico a partir dessa tabela 
+
+Div_Alfa$Fragmentos <- c(rep("Control", 10), rep("Large", 10), rep("Medium", 10), rep("Small", 10))
+ggplot(Div_Alfa, aes(Fragmentos, log(Best_0), fill=Fragmentos))+ 
+  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="", x="", caption = "Q=0")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0),
+        legend.background = element_rect(fill="gray90"))-> Plot1
+
+ggplot(Div_Alfa, aes(Fragmentos, log(Best_1), fill=Fragmentos))+ 
+  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="Diversidade Alfa", x="", caption = "Q=1")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0),
+        legend.background = element_rect(fill="gray90"))-> Plot2
+  
+ggplot(Div_Alfa, aes(Fragmentos, log(Best_2), fill=Fragmentos))+ 
+  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="", x="Classes dos Fragmentos", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 7.0),
+        legend.background = element_rect(fill="gray90"))-> Plot3
+        
+ggarrange(Plot1, Plot2, Plot3, ncol=1, nrow=3, common.legend = TRUE, legend="bottom") -> Div.Alf.Frag.Fig
+Div.Alf.Frag.Fig
+```
+
+### *Fig.2 Diversidade Alfa nos dois anos de experimento*
+
+```{r, message=FALSE, warning=FALSE}
+seed_rain2$yr <- as.factor(seed_rain2$yr)#Colocamos o ano como variável categórico por só termos dois.Desse modo, é necessário trocar ele de int para factor no data.frame
+seed_rain2 %>% 
+  group_by(yr,frag_cat,site_plot, plot) %>% 
+  summarise_if(is.numeric, sum)-> frag1
+
+Mc_frag_yr1 <- MetaCommunity(t(frag1[,-1:-5]))
+
+alf_frag_yr_00 <- AlphaDiversity(Mc_frag_yr1, 0, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                                 CheckArguments = TRUE)
+alf_frag_yr_01 <- AlphaDiversity(Mc_frag_yr1, 1, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                                 CheckArguments = TRUE)
+alf_frag_yr_02 <- AlphaDiversity(Mc_frag_yr1, 2, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                                 CheckArguments = TRUE)
+
+Dalf_frag_yr1 <- data.frame(frag1$yr, frag1$frag_cat, frag1$site_plot, frag1$plot, alf_frag_yr_00$Communities, alf_frag_yr_01$Communities, alf_frag_yr_02$Communities)
+Dalf_frag_yr1<- rename(Dalf_frag_yr1, "Ano"=frag1.yr, "Fragmentos"=frag1.frag_cat, "Site_plot"=frag1.site_plot, "Plot"=frag1.plot, "Div_0"=alf_frag_yr_00.Communities, "Div_1"=alf_frag_yr_01.Communities, "Div_2"=alf_frag_yr_02.Communities)
+
+ggplot(Dalf_frag_yr1, aes(x=Fragmentos, y=log(Div_0), fill=Ano))+
+  geom_boxplot(notch = T, alpha=0.3)+
+  labs(y="", x=" ", caption = "Q=0")+
+    theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> Plot04
+ggplot(Dalf_frag_yr1, aes(x=Fragmentos, y=log(Div_1), fill=Ano))+
+  geom_boxplot(notch = T, alpha=0.3)+
+  labs(y="Diversidade Alfa", x=" ", caption = "Q=1")+
+    theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> Plot05
+ggplot(Dalf_frag_yr1, aes(x=Fragmentos, y=log(Div_2), fill=Ano))+
+  geom_boxplot(notch = T, alpha=0.3)+
+  labs(y="", x="Classe de Fragmentos", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> Plot06
+
+ggarrange(Plot04, Plot05, Plot06, ncol=1, nrow=3, common.legend = TRUE, legend="right") -> Div.Alf.Frag.Ano.Fig
+Div.Alf.Frag.Ano.Fig
+
+```
+
+## Gerando gráficos de Abundância
+
+Construíndo a base:
+```{r, include = FALSE, message=FALSE, error=FALSE, warning=FALSE}
+seed_rain2 <- read_csv("Bases_de_dados/seed_oficial.csv")
+seed_rain2 <- rename(seed_rain2, "disp_mode" = 'disp-mode')
+
+seed_rain2$yr<-as.factor(seed_rain2$yr)
+seed_rain2$frag_cat <- as.factor(seed_rain2$frag_cat)
+seed_rain2$origem <- as.factor(seed_rain2$origem)
+seed_rain2$disp_mode <- as.factor(seed_rain2$disp_mode)
+seed_rain2$seed_size_cat <- as.factor(seed_rain2$seed_size_cat)
+
+Mc <- MetaCommunity(t(seed_rain2[,-1:-9]))
+
+alf_mc_0 <- AlphaDiversity(Mc, 0, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+
+com1 <- data.frame(seed_rain2$abund, alf_mc_0$Communities)
+com1  <- rename(com1 ,"abund"=seed_rain2.abund, "Div_0" = alf_mc_0.Communities)
+com1 [is.na(com1 )] <- 0 #Variáveis respostas 
+
+seed_rain2 %>% 
+  select(yr, frag_cat, origem, disp_mode, seed_size_cat)-> var_tree2 
+
+Dalf1 <- bind_cols(var_tree2, com1)
+
+Dalf1$abund<-as.integer(Dalf1$abund)
+Dalf1$Div_0<-as.integer(Dalf1$Div_0)
+
+str(Dalf1)
+```
+
+### *Abundância versus Tipos de Dispersão*
+```{r, warning=FALSE, message=FALSE}
+ggplot(Dalf1, aes(disp_mode, log(abund), fill=disp_mode))+ 
+  geom_jitter(aes(fill=disp_mode, col=disp_mode), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log(Abundância)", x="Tipos de dispersão")
+```
+
+### *Abundância versus Tipos de Origem*
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(Dalf1, aes(origem, log(abund), fill=origem))+ 
+  geom_jitter(aes(fill=origem, col=origem), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log(Abundância)", x="Tipos de origem")
+```
+
+### *Abundância versus Tamanho dos Fragmentos*
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(Dalf1, aes(frag_cat, log(abund), fill=frag_cat))+ 
+  geom_jitter(aes(fill=frag_cat, col=frag_cat), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log(Abundância)", x="Classe de Fragmentos")
+```
+
+### *Abundância versus Anos do experimento*
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(Dalf1, aes(yr, log(abund), fill=yr))+ 
+  geom_jitter(aes(fill=yr, col=yr), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log(Abundância)", x="Anos") 
+```
+
+### *Abundância versus Origem e Tipos de Dispersão das sementes*
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(Dalf1, aes(origem, log(abund), fill=disp_mode))+ 
+  geom_jitter(aes(fill=disp_mode, col=origem), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log(Abundância)", x="Origem das sementes")
+```
+
+### *Abundância versus Tipos de Dispersão das sementes e o Tamanho dos Fragmentos*
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(Dalf1, aes(frag_cat, log(abund), fill=disp_mode))+ 
+  geom_jitter(aes(fill=disp_mode, col=frag_cat), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log(Abundância)", x="Classe de Fragmentos")
+```
+
+### *Abundância versus Tipos de Dispersão das sementes e os Anos do experimento*
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(Dalf1, aes(yr, log(abund), fill=disp_mode))+ 
+  geom_jitter(aes(fill=disp_mode, col=yr), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log(Abundância)", x="Anos")
+```
+
+### *Abundância versus Tipos de Origem das sementes e os Anos do experimento*
+```{r, warning=FALSE, message=FALSE}
+ggplot(Dalf1, aes(yr, log(abund), fill=origem))+ 
+  geom_jitter(aes(fill=origem, col=yr), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log(Abundância)", x="Anos")
+```
+
+
+### *Abundância versus Tipos de Origem das sementes e o Tamanho dos Fragmentos*
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(Dalf1, aes(frag_cat, log(abund), fill=origem))+ 
+  geom_jitter(aes(fill=origem, col=frag_cat), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log(Abundância)", x="Classe de Fragmentos")
+```
+
+
+## Modelos
+
+Para verificar a interação entre as variáveis, decidímos contruir modelos lineares generalizados para cada diversidade. Devido aos diversos tratamentos, reduzimos as comunidades filtrando a sua origem e tipo de dispersão. Desse modo, obtemos 4 comunidades com sementes: Dispersadas e abióticas, Dispersadas e zoocóricas, Não dispersadas e abióticas e Não dispersadas e zoocóricas.
+
+Para cada comunidade buscamos calcular a diversidade verdadeira e posteriormente, submetemos cada diversidade como nossa variável resposta nos GLM's. Com a redução das variáveis independentes devido ao filtro feito nas comunidades, só ficamos com os fragmentos e o ano, deixando a fórmula bastante simples: `diversidade 0, 1 e 2 ~ fragmentos*ano`.
+
+Começamos criando as comunidades separadas por origem e dispersão, retirando o tamanho das sementes como variável independente:
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
+seed_rain2 <- read_csv("Bases_de_dados/seed_oficial.csv")
+seed_rain2 <- rename(seed_rain2, "disp_mode" = 'disp-mode')
+
+seed_rain2$yr<-as.factor(seed_rain2$yr)
+seed_rain2$frag_cat <- as.factor(seed_rain2$frag_cat)
+seed_rain2$origem <- as.factor(seed_rain2$origem)
+seed_rain2$disp_mode <- as.factor(seed_rain2$disp_mode)
+seed_rain2$seed_size_cat <- as.factor(seed_rain2$seed_size_cat)
+
+seed_rain2 %>% 
+  filter(origem=="d", disp_mode=="abio") %>% 
+  group_by(yr,frag_cat, site_plot) %>% 
+  summarise_if(is.numeric, sum)-> seed_d_abio #Comunidade das dispersadas abioticas
+
+seed_rain2 %>% 
+  filter(origem=="d", disp_mode=="zoo") %>% 
+  group_by(yr,frag_cat, site_plot) %>% 
+  summarise_if(is.numeric, sum)-> seed_d_zoo #Comunidade das dispersadas zoocorícas
+
+seed_rain2 %>% 
+  filter(origem=="nd", disp_mode=="abio") %>% 
+  group_by(yr,frag_cat, site_plot) %>% 
+  summarise_if(is.numeric, sum)-> seed_nd_abio #Comunidade das não dispersadas abioticas
+
+seed_rain2 %>% 
+  filter(origem=="nd", disp_mode=="zoo") %>% 
+  group_by(yr,frag_cat, site_plot) %>% 
+  summarise_if(is.numeric, sum)-> seed_nd_zoo #Comunidade das não dispersadas zoocoricas
+
+```
+
+Agora vamos calcular os três tipos de diversidade para cada comunidade criada acima
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
+
+#para as dispersadas abioticas
+
+Mc_d_abio <- MetaCommunity(t(seed_d_abio[,-1:-4]))
+
+alf_d_abio_0 <- AlphaDiversity(Mc_d_abio, 0, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+alf_d_abio_1 <- AlphaDiversity(Mc_d_abio, 1, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+alf_d_abio_2 <- AlphaDiversity(Mc_d_abio, 2, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+
+#para as dispersadas zoocoricas
+
+Mc_d_zoo <- MetaCommunity(t(seed_d_zoo[,-1:-4]))
+
+alf_d_zoo_0 <- AlphaDiversity(Mc_d_zoo, 0, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+alf_d_zoo_1 <- AlphaDiversity(Mc_d_zoo, 1, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+alf_d_zoo_2 <- AlphaDiversity(Mc_d_zoo, 2, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+
+#para as não dispersadas abioticas
+
+Mc_nd_abio <- MetaCommunity(t(seed_nd_abio[,-1:-4]))
+
+alf_nd_abio_0 <- AlphaDiversity(Mc_nd_abio, 0, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+alf_nd_abio_1 <- AlphaDiversity(Mc_nd_abio, 1, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+alf_nd_abio_2 <- AlphaDiversity(Mc_nd_abio, 2, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+
+#para as não dispersadas zoocoricas
+
+Mc_nd_zoo <- MetaCommunity(t(seed_nd_zoo[,-1:-4]))
+
+alf_nd_zoo_0 <- AlphaDiversity(Mc_nd_zoo, 0, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+alf_nd_zoo_1 <- AlphaDiversity(Mc_nd_zoo, 1, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+alf_nd_zoo_2 <- AlphaDiversity(Mc_nd_zoo, 2, Correction = "Best", Tree = NULL, Normalize = TRUE,
+                           CheckArguments = TRUE)
+```
+
+Com todas as variáveis calculadas, vamos criar data.frames específicos para cada comunidade a fim de, posteriormente, criar modelos para cada um deles
+
+```{r}
+#para as dispersadas abióticas
+
+com_d_abio <- data.frame(seed_d_abio$yr, seed_d_abio$frag_cat, seed_d_abio$site_plot,
+                         seed_d_abio$abund, alf_d_abio_0$Communities, alf_d_abio_1$Communities,
+                         alf_d_abio_2$Communities)
+com_d_abio <- rename(com_d_abio, "Ano"=seed_d_abio.yr, "Fragmentos"=seed_d_abio.frag_cat,
+                     "Site_plot"=seed_d_abio.site_plot,
+                     "Abund"=seed_d_abio.abund, "Div_0"=alf_d_abio_0.Communities, 
+                     "Div_1"=alf_d_abio_1.Communities, "Div_2"=alf_d_abio_2.Communities)
+
+#para as dispersadas zoocóricas
+
+com_d_zoo <- data.frame(seed_d_zoo$yr, seed_d_zoo$frag_cat, seed_d_zoo$site_plot,
+                         seed_d_zoo$abund, alf_d_zoo_0$Communities, alf_d_zoo_1$Communities,
+                         alf_d_zoo_2$Communities)
+com_d_zoo <- rename(com_d_zoo, "Ano"=seed_d_zoo.yr, "Fragmentos"=seed_d_zoo.frag_cat,
+                     "Site_plot"=seed_d_zoo.site_plot,
+                     "Abund"=seed_d_zoo.abund, "Div_0"=alf_d_zoo_0.Communities, 
+                     "Div_1"=alf_d_zoo_1.Communities, "Div_2"=alf_d_zoo_2.Communities)
+
+#para as não dispersadas abióticas
+
+com_nd_abio <- data.frame(seed_nd_abio$yr, seed_nd_abio$frag_cat, seed_nd_abio$site_plot,
+                         seed_nd_abio$abund, alf_nd_abio_0$Communities, alf_nd_abio_1$Communities,
+                         alf_nd_abio_2$Communities)
+com_nd_abio <- rename(com_nd_abio, "Ano"=seed_nd_abio.yr, "Fragmentos"=seed_nd_abio.frag_cat,
+                     "Site_plot"=seed_nd_abio.site_plot,
+                     "Abund"=seed_nd_abio.abund, "Div_0"=alf_nd_abio_0.Communities, 
+                     "Div_1"=alf_nd_abio_1.Communities, "Div_2"=alf_nd_abio_2.Communities)
+
+#para as não dispersadas zoocóricas
+
+com_nd_zoo <- data.frame(seed_nd_zoo$yr, seed_nd_zoo$frag_cat, seed_nd_zoo$site_plot,
+                         seed_nd_zoo$abund, alf_nd_zoo_0$Communities, alf_nd_zoo_1$Communities,
+                         alf_nd_zoo_2$Communities)
+com_nd_zoo <- rename(com_nd_zoo, "Ano"=seed_nd_zoo.yr, "Fragmentos"=seed_nd_zoo.frag_cat,
+                     "Site_plot"=seed_nd_zoo.site_plot,
+                     "Abund"=seed_nd_zoo.abund, "Div_0"=alf_nd_zoo_0.Communities, 
+                     "Div_1"=alf_nd_zoo_1.Communities, "Div_2"=alf_nd_zoo_2.Communities)
+```
+
+Vamos visualizar cada data.frame:
+
+```{r}
+#COMUNIDADE DAS DISPERSADAS ABIÓTICAS
+paged_table(com_d_abio)
+#COMUNIDADE DAS DISPERSADAS ZOOCÓRICAS
+paged_table(com_d_zoo)
+#COMUNIDADE DAS NÃO DISPERSADAS ABIÓTICAS
+paged_table(com_nd_abio)
+#COMUNIDADE DAS NÃO DISPERSADAS ZOOCÓRICAS
+paged_table(com_nd_zoo)
+
+#Como existem muitos valores NA, vamos transformá-los em 0
+com_d_abio[is.na(com_d_abio)] <- 0
+com_d_zoo[is.na(com_d_zoo)] <- 0
+com_nd_abio[is.na(com_nd_abio)] <- 0
+com_nd_zoo[is.na(com_nd_zoo)] <- 0
+```
+
+Vale lembrar que só temos duas variáveis independentes: `Fragmentos` e `Ano`, enquanto que possuímos 3 variáveis respostas: `Diversidade 0, 1 e 2`. Vamos começar pela diversidade 0. Além do modelos, vamos ver se os dados são dispersados usando o pacote `performance`. Caso haja alguma superdispersão, usaremos ao invés de poisson, binomial negativo para termos uma melhor adequação do modelo a realidade dos dados
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
+#Dispersadas abióticas
+m_d_abio_0<-glm(Div_0~Ano*Fragmentos, family = "poisson", data = com_d_abio)
+summary(m_d_abio_0)
+
+#Dispersadas zoocóricas
+m_d_zoo_0<-glm(Div_0~Ano*Fragmentos, family = "poisson", data = com_d_zoo)
+summary(m_d_zoo_0)
+
+#Não dispersadas abióticas
+m_nd_abio_0<-glm(Div_0~Ano*Fragmentos, family = "poisson", data = com_nd_abio)
+summary(m_nd_abio_0)
+
+#Não dispersadas zoocóricas
+m_nd_zoo_0<-glm(Div_0~Ano*Fragmentos, family = "poisson", data = com_nd_zoo)
+summary(m_nd_zoo_0)
+
+library(performance)
+check_overdispersion(m_d_abio_0)
+check_overdispersion(m_d_zoo_0)
+check_overdispersion(m_nd_abio_0)
+check_overdispersion(m_nd_zoo_0)
+
+#Apenas o modelos das dispersadas zoocóricas apresentaram superdispersão, devido a isso, refizemos o modelo agora com o binomial negativo
+library(MASS)
+
+m_d_zoo_0_1<-glm.nb(Div_0~Ano*Fragmentos, data = com_d_abio)
+summary(m_d_zoo_0_1)
+
+library(sjPlot)
+tab_model(m_d_abio_0, m_d_zoo_0_1, m_nd_abio_0, m_nd_zoo_0, auto.label = FALSE, show.ci = FALSE, file = "Tab_div_0.odt",
+          dv.labels = c("Sementes Dispersada Abiotica", "Sementes Dispersada Zoocorica", "Sementes Locais Abioticas",
+                        "Sementes Locais Zoocoricas"))
+
+```
+
+Encontramos que para as sementes abióticas tanto de origem dispersada quanto local, o ano e o fragmento não apresentam qualquer mudança significativa na variável resposta. Esse padrão também foi encontrado para as sementes zoocóricas não dispersadas. A única comunidade que se mostrou diferente com o glm `m_d_zoo_0` foi a das sementes zoocóricas dispersadas, na qual o fragmento médio teve um aumento da diversidade 0 em relação ao fragmento controle. Ainda, a interação entre o ano e o fragmento mostrou que houve uma diminuição significativa da riqueza no ano de 2007 para os fragmentos médio e pequeno em comparação com o ano de 2006. Entretanto, quando olhamos essa mesma comunidade usando a família binomial negativa `m_d_zoo_0_1` que lida melhor com a superdispersão, encontramos a ausência de interações significativas. 
+
+```{r}
+#Grafico dos Fragmentos
+ggplot(com_d_zoo, aes(Fragmentos, Div_0, fill=Fragmentos))+ 
+  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log da Diversidade", x="Classe de Fragmentos", caption = "Q=0")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))
+```
+
+
+As outras variáveis respostas são a diversidade 1 e 2. Diferentemente da diversidade 0, essas variáveis apresentam números decimais e devido a isso não podemos usar o glm com poisson. Distribuições como gama e normal, aceitam números decimais. Entretanto, a gamma não aceita números negativos ou zeros, e isso impossibilita a sua utilização nos nossos dados. Desse modo, optamos por utilizar a distribuição normal.
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
+glm_d_abio_1<-glm(Div_1~Ano*Fragmentos, family = "gaussian", data = com_d_abio)
+summary(glm_d_abio_1)
+glm_d_zoo_1<-glm(Div_1~Ano*Fragmentos, family = "gaussian", data = com_d_zoo)
+summary(glm_d_zoo_1)
+glm_nd_abio_1<-glm(Div_1~Ano*Fragmentos,family = "gaussian", data = com_nd_abio)
+summary(glm_nd_abio_1)
+glm_nd_zoo_1<-glm(Div_1~Ano*Fragmentos, family = "gaussian", data = com_nd_zoo)
+summary(glm_nd_zoo_1)
+
+library(sjPlot)
+
+tab_model(glm_d_abio_1, glm_d_zoo_1, glm_nd_abio_1, glm_nd_zoo_1, auto.label = FALSE, show.ci = FALSE, file = "Tab_div_1.odt",
+          dv.labels = c("Sementes Dispersada Abiotica", "Sementes Dispersada Zoocorica", "Sementes Locais Abioticas",
+                        "Sementes Locais Zoocoricas"))
+
+```
+
+Os resultados são diferentes quando comparamos com os resultados obtidos na diversidade 0. Aqui, as sementes não dispersadas tanto zoocóricas quanto abióticas não apresentaram qualquer mudança significativa na diversidade 1 (mais sensível as espécies raras). As sementes dispersadas abióticas apresentaram um aumento da diversidade sensível as espécies raras nos fragmentos médio e pequeno quando comparado ao fragmento controle. Isso pode ser devido a espécies que outrotra não estavam ali e, com a fragmentação, passaram a ocupar o local, sendo encaradas como raras pelo modelo. As sementes dispersadas zoocóricas apresentaram uma diferença significativa no tamanho médio quando comparado ao tamanho controle, com o tamanho médio contendo diversidade de espécies raras maior que o controle. A interação das variáveis apresentou-se significativa apenas para o tamanho médio. Ele contém menos diversidade quando comparado ao tamanho médio no ano de 2006, muito possivelmente devido a reprodução supraanual.
+
+```{r, warning=FALSE, message=FALSE}
+#Grafico dos Fragmentos
+#dispersada abio
+ggplot(com_d_abio, aes(Fragmentos, log(Div_1+1), fill=Fragmentos))+ 
+  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log da Diversidade", x="Classe de Fragmentos", caption = "Q=1")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))
+#dispersada zoo
+ggplot(com_d_zoo, aes(Fragmentos, log(Div_1+1), fill=Fragmentos))+ 
+  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log da Diversidade", x="Classe de Fragmentos", caption = "Q=1")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))
+```
+
+Agora os modelos com Diversidade_2
+```{r, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
+#glm
+glm_d_abio_2<-glm(Div_2~Ano*Fragmentos, family = "gaussian", data = com_d_abio)
+summary(glm_d_abio_2)
+glm_d_zoo_2<-glm(Div_2~Ano*Fragmentos, family = "gaussian", data = com_d_zoo)
+summary(glm_d_zoo_2)
+glm_nd_abio_2<-glm(Div_2~Ano*Fragmentos,family = "gaussian", data = com_nd_abio)
+summary(glm_nd_abio_2)
+glm_nd_zoo_2<-glm(Div_2~Ano*Fragmentos, family = "gaussian", data = com_nd_zoo)
+summary(glm_nd_zoo_2)
+
+library(sjPlot)
+tab_model(glm_d_abio_2, glm_d_zoo_2, glm_nd_abio_2, glm_nd_zoo_2, auto.label = FALSE, show.ci = FALSE, file = "Tab_div_2.odt",
+          dv.labels = c("Sementes Dispersada Abiotica", "Sementes Dispersada Zoocorica", "Sementes Locais Abioticas",
+                        "Sementes Locais Zoocoricas"))
+
+```
+
+Encontramos algo semelhante com a diversidade anterior. Para a diversidade sensível a espécies dominantes, encontramos que para as sementes com origem não dispersada, não existe nenhuma relação signficativa entre nossas variáveis independetes a nossa variável resposta. Entretanto, para as sementes dispersadas houve uma mudança significativa. As dispersadas abióticas apresentaram uma diversidade sensível a espécies dominantes maior nos fragmentos pequeno e médio em relação ao fragmento controle. Enquanto que para as sementes zoocóricas apenas a interação entre o ano e o fragmento médio se apresentou significativa, com o fragmento médio de 2007 contendo menor diversidade de espécies dominantes que o fragmento médio do ano anterior. Novamente, acreditamos que isso se deva a reprodução supraanual. 
+
+```{r}
+#Grafico dos Fragmentos
+#dispersada abio
+ggplot(com_d_abio, aes(Fragmentos, log(Div_2+1), fill=Fragmentos))+ 
+  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log da Diversidade", x="Classe de Fragmentos", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))
+#dispersada zoo
+ggplot(com_d_zoo, aes(Fragmentos, log(Div_2+1), fill=Fragmentos))+ 
+  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log da Diversidade", x="Classe de Fragmentos", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))
+```
+
+
+Agora vamos para os gráficos com as variáveis independentes juntas.
+
+```{r, fig.show='asis', collapse=TRUE, message=FALSE, warning=FALSE}
+#Gráfico para a Diversidade 0
+ggplot(com_d_abio, aes(x=Fragmentos, y=log10(Div_0+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Abióticas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=0")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P8
+ggplot(com_d_zoo, aes(x=Fragmentos, y=log10(Div_0+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Zoocóricas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=0")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P9
+ggplot(com_nd_abio, aes(x=Fragmentos, y=log10(Div_0+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Abióticas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=0")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P10
+ggplot(com_nd_zoo, aes(x=Fragmentos, y=log10(Div_0+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Zoocóricas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=0")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P11
+library(ggpubr)
+
+ggarrange(P8, P9, P10, P11, ncol=2, nrow=2, common.legend = TRUE, legend="bottom") -> Imagem3
+Imagem3
+
+#Gráfico para a Diversidade 1
+ggplot(com_d_abio, aes(x=Fragmentos, y=log10(Div_1+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Abióticas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=1")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P12
+ggplot(com_d_zoo, aes(x=Fragmentos, y=log10(Div_1+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Zoocóricas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=1")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P13
+ggplot(com_nd_abio, aes(x=Fragmentos, y=log10(Div_1+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Abióticas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=1")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P14
+ggplot(com_nd_zoo, aes(x=Fragmentos, y=log10(Div_1+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Zoocóricas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=1")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P15
+
+ggarrange(P12, P13, P14, P15, ncol=2, nrow=2, common.legend = TRUE, legend="bottom") -> Imagem4
+Imagem4
+
+#Gráfico para a Diversidade 2
+ggplot(com_d_abio, aes(x=Fragmentos, y=log10(Div_2+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Abióticas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P16
+ggplot(com_d_zoo, aes(x=Fragmentos, y=log10(Div_2+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Zoocóricas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P17
+ggplot(com_nd_abio, aes(x=Fragmentos, y=log10(Div_2+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Abióticas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P18
+ggplot(com_nd_zoo, aes(x=Fragmentos, y=log10(Div_2+1), fill=Ano))+
+  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(title="Sementes Zoocóricas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))-> P19
+
+ggarrange(P16, P17, P18, P19, ncol=2, nrow=2, common.legend = TRUE, legend="bottom") -> Imagem5
+Imagem5
+
+```
+
+## Curva de Acumulação
+
+```{r}
+seed_rain2$yr<-as.factor(seed_rain2$yr)
+
+#Criando as comunidades
+seed_rain2 %>% 
+  group_by(site) %>% 
+  summarise_if(is.numeric, sum)->cds
+
+cds %>% 
+  arrange(desc(site))->cds_desc
+
+# Curva de Acumulação
+a1<-accumresult(cds[,c(-1:-2)], method = "collector")
+a2<-accumresult(cds_desc[,c(-1:-2)], method = "collector")
+
+#Data.frame para o plot
+data_cds<-data.frame(a1$richness, a2$richness)
+data_cds$area<-seq(400, 3200, 400)
+data_cds$hectares <- c(rep("2.3", 1), rep("2.9", 1), rep("22.0", 1), rep("29.0", 1),
+                       rep("640", 2), rep("5000", 2))
+data_cds<-rename(data_cds, "riqGrandPeq"=a1.richness,  "riqPeqGrande"=a2.richness)
+paged_table(data_cds)
+
+#ggplot
+ggplot(data_cds, aes(as.factor(area), riqPeqGrande, group=1, fill=hectares))+
+  geom_line()+
+  geom_point(size=log(as.numeric(data_cds$hectares)), alpha=0.5)+
+  geom_line(aes(as.factor(area), riqGrandPeq, group=1), col="#CC0000")+
+  geom_point(aes(as.factor(area), riqGrandPeq, group=1), col="#CC0000", size=log(rev(as.numeric(data_cds$hectares))), alpha=0.5)+
+  labs(y="Número de espécies acumuladas", x="Área amostrada (m²)")+
+  theme(legend.position = "right",
+        legend.background = element_rect(fill="gray90")) +
+  scale_size_continuous(name = "Hectares",
+                        guide = "legend")
+```
+
+Agora vamos diferenciar a acumulação pelo ano do experimento
+
+```{r}
+seed_rain2 %>% 
+  group_by(yr, site) %>% 
+  summarise_if(is.numeric, sum)->t1
+
+t1 %>% 
+  filter(yr=="2006")->t06
+
+t06 %>% 
+  arrange(desc(site))->t06_desc
+
+t1 %>% 
+  filter(yr=="2007")->t07
+
+t07 %>% 
+  arrange(desc(site))->t07_desc
+
+#fazendo a curva de espécies
+
+ac_t06<-accumresult(t06[,c(-1:-3)], method = "collector")
+ac_t06_desc<-accumresult(t06_desc[,c(-1:-3)], method = "collector")
+ac_t07<-accumresult(t07[,c(-1:-3)], method = "collector")
+ac_t07_desc<-accumresult(t07_desc[,c(-1:-3)], method = "collector")
+
+#Criando comundidade separada para cada ano
+
+data_t06 <- data.frame(t06$yr, ac_t06$richness, ac_t06_desc$richness)
+data_t06$area<-seq(400, 3200, 400)
+data_t06 <- rename(data_t06, "Ano" = t06.yr, "riq_t06"=ac_t06.richness,  "riq_t06_desc"=ac_t06_desc.richness)
+data_t06
+
+data_t07 <- data.frame(t07$yr, ac_t07$richness, ac_t07_desc$richness)
+data_t07$area<-seq(400, 3200, 400)
+data_t07 <- rename(data_t07, "Ano" = t07.yr, "riq_t07"=ac_t07.richness,  "riq_t07_desc"=ac_t07_desc.richness)
+data_t07
+
+#Obs:Não tem importância que a ordem de sites esteja invertida, já que no gráfico o que aparecem são na verdade, classificações dos hectares feitas com o log. Formando apenas 4 e não 6.
+
+# Adicionando os hectares e trnasformando-os em numericos
+
+data_t06$hectares <- c(rep("2.3", 1), rep("2.9", 1), rep("22.0", 1), rep("29.0", 1),
+                       rep("640", 2), rep("5000", 2))
+
+data_t07$hectares <- c(rep("2.3", 1), rep("2.9", 1), rep("22.0", 1), rep("29.0", 1),
+                       rep("640", 2), rep("5000", 2))
+
+#Criando gráficos
+
+p21<-ggplot(data_t06, aes(as.factor(area), riq_t06_desc, group=1, fill=hectares))+
+  geom_line()+
+  geom_point(size=log(as.numeric(data_t06$hectares)), alpha=0.5)+
+  geom_line(aes(as.factor(area), riq_t06, group=1), col="#CC0000")+
+  geom_point(aes(as.factor(area), riq_t06, group=1), col="#CC0000", size=log(rev(as.numeric(data_t06$hectares))), alpha=0.5)+
+  labs(y="Número de espécies acumuladas", x="Área amostrada (m)", caption = "2006")+
+  theme(legend.position = "right",
+        plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0)) +
+  scale_size_continuous(name = "Hectáres",
+                        guide = "legend")
+
+p22<-ggplot(data_t07, aes(as.factor(area), riq_t07_desc, group=1, fill=hectares))+
+  geom_line()+
+  geom_point(size=log(as.numeric(data_t07$hectares)), alpha=0.5)+
+  geom_line(aes(as.factor(area), riq_t07, group=1), col="#CC0000")+
+  geom_point(aes(as.factor(area), riq_t07, group=1), col="#CC0000", size=log(rev(as.numeric(data_t07$hectares))), alpha=0.5)+
+  labs(y="Número de espécies acumuladas", x="Área amostrada (m)", caption = "2007")+
+  theme(legend.position = "right",
+        plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0)) +
+  scale_size_continuous(name = "Hectáres",
+                        guide = "legend")
+
+ggarrange(p21, p22, ncol=1, nrow=2, common.legend = TRUE, legend="right") -> Imagem6
+Imagem6
+```
