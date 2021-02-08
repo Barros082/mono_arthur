@@ -1,0 +1,354 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=windows-1252"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 7.0.1.2 (Windows)"/>
+	<meta name="created" content="00:00:00"/>
+	<meta name="changed" content="2021-01-13T16:42:23.735000000"/>
+</head>
+<body lang="pt-BR" dir="ltr">
+<table width="853" cellpadding="2" cellspacing="1" style="page-break-before: always">
+	<col width="249"/>
+
+	<col width="82"/>
+
+	<col width="48"/>
+
+	<col width="82"/>
+
+	<col width="59"/>
+
+	<col width="82"/>
+
+	<col width="59"/>
+
+	<col width="82"/>
+
+	<col width="61"/>
+
+	<tbody>
+		<tr>
+			<th width="249" style="border-top: 1px double #000000; border-bottom: none; border-left: none; border-right: none; padding-top: 0.2cm; padding-bottom: 0cm; padding-left: 0cm; padding-right: 0cm"><p align="left" style="font-variant: normal">
+				&nbsp;</p>
+			</th>
+			<th colspan="2" width="136" style="border-top: 1px double #000000; border-bottom: none; border-left: none; border-right: none; padding-top: 0.2cm; padding-bottom: 0cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-variant: normal; font-style: normal">
+				<b>Sementes Dispersada Abi&oacute;tica</b></p>
+			</th>
+			<th colspan="2" width="147" style="border-top: 1px double #000000; border-bottom: none; border-left: none; border-right: none; padding-top: 0.2cm; padding-bottom: 0cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-variant: normal; font-style: normal">
+				<b>Sementes Dispersada Zooc&oacute;rica</b></p>
+			</th>
+			<th colspan="2" width="147" style="border-top: 1px double #000000; border-bottom: none; border-left: none; border-right: none; padding-top: 0.2cm; padding-bottom: 0cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-variant: normal; font-style: normal">
+				<b>Sementes Locais Abi&oacute;ticas</b></p>
+			</th>
+			<th colspan="2" width="149" style="border-top: 1px double #000000; border-bottom: none; border-left: none; border-right: none; padding-top: 0.2cm; padding-bottom: 0cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-variant: normal; font-style: normal">
+				<b>Sementes Locais Zooc&oacute;ricas</b></p>
+			</th>
+		</tr>
+		<tr>
+			<td width="249" style="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.05cm; padding-left: 0cm; padding-right: 0cm"><p align="left" style="font-weight: normal">
+				<i>Predictors</i></p>
+			</td>
+			<td width="82" style="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.05cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-weight: normal">
+				<i>Estimates</i></p>
+			</td>
+			<td width="48" style="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.05cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-weight: normal">
+				<i>p</i></p>
+			</td>
+			<td width="82" style="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.05cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-weight: normal">
+				<i>Estimates</i></p>
+			</td>
+			<td width="59" style="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.05cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-weight: normal">
+				<i>p</i></p>
+			</td>
+			<td width="82" style="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.05cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-weight: normal">
+				<i>Estimates</i></p>
+			</td>
+			<td width="59" style="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.05cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-weight: normal">
+				<i>p</i></p>
+			</td>
+			<td width="82" style="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.05cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-weight: normal">
+				<i>Estimates</i></p>
+			</td>
+			<td width="61" style="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.05cm; padding-left: 0cm; padding-right: 0cm"><p align="center" style="font-weight: normal">
+				<i>p</i></p>
+			</td>
+		</tr>
+	</tbody>
+	<tbody>
+		<tr>
+			<td width="249" style="border: none; padding: 0cm"><p align="left">
+				(Intercept)</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				0.40</p>
+			</td>
+			<td width="48" style="border: none; padding: 0cm"><p align="center">
+				<strong>0.021</strong></p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				2.39</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				<strong>&lt;0.001</strong></p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				0.91</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				<strong>&lt;0.001</strong></p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				2.12</p>
+			</td>
+			<td width="61" style="border: none; padding: 0cm"><p align="center">
+				<strong>&lt;0.001</strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td width="249" style="border: none; padding: 0cm"><p align="left">
+				Ano2007</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.30</p>
+			</td>
+			<td width="48" style="border: none; padding: 0cm"><p align="center">
+				0.215</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.07</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.906</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				0.05</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.848</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.22</p>
+			</td>
+			<td width="61" style="border: none; padding: 0cm"><p align="center">
+				0.536</p>
+			</td>
+		</tr>
+		<tr>
+			<td width="249" style="border: none; padding: 0cm"><p align="left">
+				FragmentosLarge</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				0.37</p>
+			</td>
+			<td width="48" style="border: none; padding: 0cm"><p align="center">
+				0.131</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.24</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.705</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.41</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.143</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.20</p>
+			</td>
+			<td width="61" style="border: none; padding: 0cm"><p align="center">
+				0.570</p>
+			</td>
+		</tr>
+		<tr>
+			<td width="249" style="border: none; padding: 0cm"><p align="left">
+				FragmentosMedium</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				0.62</p>
+			</td>
+			<td width="48" style="border: none; padding: 0cm"><p align="center">
+				<strong>0.012</strong></p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				1.35</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				<strong>0.037</strong></p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.28</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.308</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.30</p>
+			</td>
+			<td width="61" style="border: none; padding: 0cm"><p align="center">
+				0.397</p>
+			</td>
+		</tr>
+		<tr>
+			<td width="249" style="border: none; padding: 0cm"><p align="left">
+				FragmentosSmall</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				0.60</p>
+			</td>
+			<td width="48" style="border: none; padding: 0cm"><p align="center">
+				<strong>0.015</strong></p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				0.26</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.683</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.41</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.143</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.07</p>
+			</td>
+			<td width="61" style="border: none; padding: 0cm"><p align="center">
+				0.845</p>
+			</td>
+		</tr>
+		<tr>
+			<td width="249" style="border: none; padding: 0cm"><p align="left">
+				Ano2007:FragmentosLarge</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.37</p>
+			</td>
+			<td width="48" style="border: none; padding: 0cm"><p align="center">
+				0.284</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.71</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.429</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.15</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.696</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				0.41</p>
+			</td>
+			<td width="61" style="border: none; padding: 0cm"><p align="center">
+				0.418</p>
+			</td>
+		</tr>
+		<tr>
+			<td width="249" style="border: none; padding: 0cm"><p align="left">
+				Ano2007:FragmentosMedium</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.32</p>
+			</td>
+			<td width="48" style="border: none; padding: 0cm"><p align="center">
+				0.353</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-2.00</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				<strong>0.028</strong></p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.04</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.928</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.15</p>
+			</td>
+			<td width="61" style="border: none; padding: 0cm"><p align="center">
+				0.766</p>
+			</td>
+		</tr>
+		<tr>
+			<td width="249" style="border: none; padding: 0cm"><p align="left">
+				Ano2007:FragmentosSmall</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.40</p>
+			</td>
+			<td width="48" style="border: none; padding: 0cm"><p align="center">
+				0.245</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-1.39</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.126</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.35</p>
+			</td>
+			<td width="59" style="border: none; padding: 0cm"><p align="center">
+				0.368</p>
+			</td>
+			<td width="82" style="border: none; padding: 0cm"><p align="center">
+				-0.10</p>
+			</td>
+			<td width="61" style="border: none; padding: 0cm"><p align="center">
+				0.840</p>
+			</td>
+		</tr>
+	</tbody>
+	<tbody>
+		<tr>
+			<td width="249" style="border-top: 1px solid #000000; border-bottom: none; border-left: none; border-right: none; padding-top: 0.1cm; padding-bottom: 0cm; padding-left: 0cm; padding-right: 0cm"><p align="left">
+				Observations</p>
+			</td>
+			<td colspan="2" width="136" style="border-top: 1px solid #000000; border-bottom: none; border-left: none; border-right: none; padding-top: 0.1cm; padding-bottom: 0cm; padding-left: 0cm; padding-right: 0cm"><p align="left">
+				80</p>
+			</td>
+			<td colspan="2" width="147" style="border-top: 1px solid #000000; border-bottom: none; border-left: none; border-right: none; padding-top: 0.1cm; padding-bottom: 0cm; padding-left: 0cm; padding-right: 0cm"><p align="left">
+				80</p>
+			</td>
+			<td colspan="2" width="147" style="border-top: 1px solid #000000; border-bottom: none; border-left: none; border-right: none; padding-top: 0.1cm; padding-bottom: 0cm; padding-left: 0cm; padding-right: 0cm"><p align="left">
+				80</p>
+			</td>
+			<td colspan="2" width="149" style="border-top: 1px solid #000000; border-bottom: none; border-left: none; border-right: none; padding-top: 0.1cm; padding-bottom: 0cm; padding-left: 0cm; padding-right: 0cm"><p align="left">
+				80</p>
+			</td>
+		</tr>
+		<tr>
+			<td width="249" style="border: none; padding: 0cm"><p align="left">
+				R<sup>2</sup> Nagelkerke</p>
+			</td>
+			<td colspan="2" width="136" style="border: none; padding: 0cm"><p align="left">
+				0.360</p>
+			</td>
+			<td colspan="2" width="147" style="border: none; padding: 0cm"><p align="left">
+				0.484</p>
+			</td>
+			<td colspan="2" width="147" style="border: none; padding: 0cm"><p align="left">
+				0.166</p>
+			</td>
+			<td colspan="2" width="149" style="border: none; padding: 0cm"><p align="left">
+				0.095</p>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<p><br/>
+<br/>
+
+</p>
+</body>
+</html>
