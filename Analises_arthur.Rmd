@@ -13,7 +13,7 @@ Olá, me chamo Arthur Barros e vou apresentar as análises do artigo criado por 
 Esse trabalho foi baseado no artigo Forest fragmentation reduces recruitment of large-seeded tree species
 in a semi-deciduous tropical forest of southern Mexico, publicado no ano de 2010 na Journal of Tropical Ecology. Confira [aqui.](https://www.cambridge.org/core/product/identifier/S0266467409990435/type/journal_article)` 
 
-Fizemos uma releitura dos dados de chuva de sementes de Melo et al., (2010), questionando: i) Se existe o mesmo padrão entre os fragmentos e o ano nos três níveis de diversidade, ii) Se a superprodução de sementes interfere significativamente na diversidade dos fragmentos, iii) Qual o padrão da acumulação de espécies entre os fragmentos. As hipóteses são i) Que existe o mesmo padrão para as espécies abundantes e raras quanto ao ano, mas não quanto ao fragmento, ii) Há uma relação positiva e significante entre a superprodução e a diversidade das sementes, iii) Que o acumulo é mais rápido nos menores fragmentos. 
+Fizemos uma releitura dos dados de chuva de sementes de Melo et al., (2010), questionando: i) Se a fragmentação e a reprodução supraanual interferem na diversidade efetiva da chuva de sementes, ii) Se as espécies dispersadas são mais afetadas que as espécies locais pela fragmentação, iii) Qual o padrão da acumulação de espécies entre os fragmentos. Esperamos que i) Exista uma relação negativa e significante entre a superprodução e a diversidade das sementes para o ano de baixa reprodução, e que a fragmentação apresente efeito positivo somente nas espécies raras; ii) Se encontre efeitos mais fortes da fragmentação nas sementes dispersadas, e, por fim, iii) que seja observado um padrão de acumulo mais rápido das espécies dos menores fragmentos para os maiores.
 
 Para as análises, utilizou-se esses pacotes:
 ```{r Pacotes, warning=FALSE, echo=TRUE,  message=FALSE}
@@ -135,7 +135,7 @@ seed_rain %>%
 
 *Aqui começa a brincadeira!!*
 
-Buscou-se realizar o método de ordenação NMDS (Escalonamento Multidimensional Não Métrico) para entender melhor a organização dos dados. Em sequência, foi gerada as diversidades e os gráficos descritivos que possibilitaram maior visualização do conjunto de informações. Criou-se um modelo linear generalizado buscando relacionar as variáveis independentes (ano, tamanho de fragmento, tipo de dispersão e origem) com nossas variáveis respostas (diversidade 0, 1 e 2). E por fim, realizou-se uma análise gráfica comparando as curvas de acumulação das espécies pela área amostrada, objetivando identificar em qual ordem dos fragmentos as espécies são acumuladas mais rápidas.  
+Buscou-se realizar o método de ordenação NMDS (Escalonamento Multidimensional Não Métrico) para entender melhor a organização dos dados. Em sequência, foi gerada as diversidades e os gráficos descritivos que possibilitaram maior visualização do conjunto de informações. Criou-se um modelo linear generalizado buscando relacionar as variáveis independentes (ano, tamanho de fragmento, tipo de dispersão e origem) com nossas variáveis respostas (diversidade efetiva 0, 1 e 2). E por fim, realizou-se uma análise gráfica comparando as curvas de acumulação das espécies pela área amostrada, objetivando identificar em qual ordem dos fragmentos as espécies são acumuladas mais rápidas.  
 
 Antes disso tudo, é preciso organizar a nossa tabela e criar a tabela de comunidade. Para isso, foi preciso modificar a planilha de dados no Calc/Excel. Aqui embaixo vou mostrar a diferença entre as duas tabelas:
 
@@ -186,7 +186,7 @@ paged_table(var_tree2)
 
 Submetemos a tabela da comunidade ao NMDS e criamos o gráfico com o intuito de encontrar alguma correlação entre a chuva de sementes e os fragmentos. Esperávamos encontrar um agrupamento de sementes da mesma classe.
 
-```{r NMDS_fig, fig.show='asis',  echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
+```{r NMDS_fig, echo=TRUE, fig.show='asis', message=FALSE, warning=FALSE, collapse=TRUE}
 NMDS <- metaMDS(comm_tree2[, -1], k=2, distance = "bray")
 
 #Tamanho dos Fragmentos
@@ -195,7 +195,9 @@ NMDS_data$cat_frag <- c(rep("Control", 10), rep("Large", 10), rep("Medium", 10),
 
 ggplot(NMDS_data, aes(MDS1, MDS2, color=cat_frag))+
   geom_point(size=2)+
-  labs(color="Classe dos Fragmentos")
+  scale_color_discrete(name="Fragmentos", 
+                       labels=c("Contínuo", "Grande", "Médio", "Pequeno"))->Fig_NMDS
+Fig_NMDS
 
 ```
 
@@ -206,7 +208,7 @@ Aqui vamos ter dois gráficos principais, o primeiro é a diversidade alfa sobre
 
 ### *Fig1. Diversidade Alfa nas Quatro classes de Fragmentos*
 
-```{r Alfa_frag, fig.show='asis', collapse=TRUE, message=FALSE, warning=FALSE}
+```{r fig_2_Alfa_frag, fig.dim=c(8,8), fig.align='center', collapse=TRUE, message=FALSE, warning=FALSE}
 MC <- MetaCommunity(t(comm_tree2[,-1]))
 
 #Calculando a diversidade alfa com todos os q para o método None
@@ -233,43 +235,57 @@ Div_Alfa <- rename(Div_Alfa,"Fragmentos" = comm_tree2.site_plot, "None_0" = alph
 #Plotando o gráfico a partir dessa tabela 
 
 Div_Alfa$Fragmentos <- c(rep("Control", 10), rep("Large", 10), rep("Medium", 10), rep("Small", 10))
-ggplot(Div_Alfa, aes(Fragmentos, log(Best_0), fill=Fragmentos))+ 
-  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
+ggplot(Div_Alfa, aes(Fragmentos, log(Best_0)))+ 
+  geom_jitter(aes(col=Fragmentos), alpha=0.5) +
+  geom_boxplot(aes(fill=Fragmentos), alpha=0.3)+
   labs(y="", x="", caption = "Q=0")+
   theme(plot.caption=element_text(size=10,
                                   face ="bold.italic",
                                   hjust = 1.0,
-                                  vjust = 9.0),
-        legend.background = element_rect(fill="gray90"))-> Plot1
+                                  vjust = 9.0))+
+  scale_x_discrete(labels = c(Control = "Contínuo", Large = "Grande", Medium = "Médio", Small = "Pequeno"))+
+  scale_fill_discrete(name="Fragmentos", 
+                       labels=c("Contínuo", "Grande", "Médio", "Pequeno"))+
+  scale_color_discrete(name="Fragmentos", 
+                       labels=c("Contínuo", "Grande", "Médio", "Pequeno"))-> Plot1
 
-ggplot(Div_Alfa, aes(Fragmentos, log(Best_1), fill=Fragmentos))+ 
-  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(y="Diversidade Alfa", x="", caption = "Q=1")+
+ggplot(Div_Alfa, aes(Fragmentos, log(Best_1)))+ 
+  geom_jitter(aes(col=Fragmentos), alpha=0.5) +
+  geom_boxplot(aes(fill=Fragmentos), alpha=0.3)+
+  labs(y="", x="", caption = "Q=1")+
   theme(plot.caption=element_text(size=10,
                                   face ="bold.italic",
                                   hjust = 1.0,
-                                  vjust = 9.0),
-        legend.background = element_rect(fill="gray90"))-> Plot2
+                                  vjust = 9.0))+
+  scale_x_discrete(labels = c(Control = "Contínuo", Large = "Grande", Medium = "Médio", Small = "Pequeno"))+
+  scale_fill_discrete(name="Fragmentos", 
+                       labels=c("Contínuo", "Grande", "Médio", "Pequeno"))+
+  scale_color_discrete(name="Fragmentos", 
+                       labels=c("Contínuo", "Grande", "Médio", "Pequeno"))-> Plot2
   
-ggplot(Div_Alfa, aes(Fragmentos, log(Best_2), fill=Fragmentos))+ 
-  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(y="", x="Classes dos Fragmentos", caption = "Q=2")+
+ggplot(Div_Alfa, aes(Fragmentos, log(Best_2)))+ 
+  geom_jitter(aes(col=Fragmentos), alpha=0.5) +
+  geom_boxplot(aes(fill=Fragmentos), alpha=0.3)+
+  labs(y="", x="", caption = "Q=2")+
   theme(plot.caption=element_text(size=10,
                                   face ="bold.italic",
                                   hjust = 1.0,
-                                  vjust = 7.0),
-        legend.background = element_rect(fill="gray90"))-> Plot3
+                                  vjust = 7.0))+
+  scale_x_discrete(labels = c(Control = "Contínuo", Large = "Grande", Medium = "Médio", Small = "Pequeno"))+
+  scale_fill_discrete(name="Fragmentos", 
+                       labels=c("Contínuo", "Grande", "Médio", "Pequeno"))+
+  scale_color_discrete(name="Fragmentos", 
+                       labels=c("Contínuo", "Grande", "Médio", "Pequeno"))-> Plot3
         
-ggarrange(Plot1, Plot2, Plot3, ncol=1, nrow=3, common.legend = TRUE, legend="bottom") -> Div.Alf.Frag.Fig
-Div.Alf.Frag.Fig
+ggarrange(Plot1, Plot2, Plot3, ncol=1, nrow=3, common.legend = TRUE, legend="right", align = "hv") -> Div.Alf.Frag.Fig
+annotate_figure(Div.Alf.Frag.Fig,
+                left = text_grob("Diversidade Alfa", rot = 90, size = 15),
+                bottom = text_grob("Tamanho dos fragmentos", size = 15))
 ```
 
 ### *Fig.2 Diversidade Alfa nos dois anos de experimento*
 
-```{r, message=FALSE, warning=FALSE}
+```{r fig3_Alfa_frag_ano, message=FALSE, warning=FALSE, fig.align='center', fig.dim=c(8,8)}
 seed_rain2$yr <- as.factor(seed_rain2$yr)#Colocamos o ano como variável categórico por só termos dois.Desse modo, é necessário trocar ele de int para factor no data.frame
 seed_rain2 %>% 
   group_by(yr,frag_cat,site_plot, plot) %>% 
@@ -287,37 +303,50 @@ alf_frag_yr_02 <- AlphaDiversity(Mc_frag_yr1, 2, Correction = "Best", Tree = NUL
 Dalf_frag_yr1 <- data.frame(frag1$yr, frag1$frag_cat, frag1$site_plot, frag1$plot, alf_frag_yr_00$Communities, alf_frag_yr_01$Communities, alf_frag_yr_02$Communities)
 Dalf_frag_yr1<- rename(Dalf_frag_yr1, "Ano"=frag1.yr, "Fragmentos"=frag1.frag_cat, "Site_plot"=frag1.site_plot, "Plot"=frag1.plot, "Div_0"=alf_frag_yr_00.Communities, "Div_1"=alf_frag_yr_01.Communities, "Div_2"=alf_frag_yr_02.Communities)
 
-ggplot(Dalf_frag_yr1, aes(x=Fragmentos, y=log(Div_0), fill=Ano))+
-  geom_boxplot(notch = T, alpha=0.3)+
+ggplot(Dalf_frag_yr1, aes(x=Fragmentos, y=log(Div_0)))+
+  geom_boxplot(aes(fill=Ano), alpha=0.3)+
   labs(y="", x=" ", caption = "Q=0")+
-    theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> Plot04
-ggplot(Dalf_frag_yr1, aes(x=Fragmentos, y=log(Div_1), fill=Ano))+
-  geom_boxplot(notch = T, alpha=0.3)+
-  labs(y="Diversidade Alfa", x=" ", caption = "Q=1")+
-    theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> Plot05
-ggplot(Dalf_frag_yr1, aes(x=Fragmentos, y=log(Div_2), fill=Ano))+
-  geom_boxplot(notch = T, alpha=0.3)+
-  labs(y="", x="Classe de Fragmentos", caption = "Q=2")+
   theme(plot.caption=element_text(size=10,
                                   face ="bold.italic",
                                   hjust = 1.0,
-                                  vjust = 9.0))-> Plot06
+                                  vjust = 9.0))+
+  scale_x_discrete(labels = c(Control = "Contínuo", Large = "Grande", Medium = "Médio", Small = "Pequeno"))+
+  scale_fill_discrete(name="Anos do experimento", 
+                      labels=c("2006", "2007"))-> Plot04
+ggplot(Dalf_frag_yr1, aes(x=Fragmentos, y=log(Div_1)))+
+  geom_boxplot(aes(fill=Ano), alpha=0.3)+
+  labs(y="", x="", caption = "Q=1")+
+    theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_x_discrete(labels = c(Control = "Contínuo", Large = "Grande", Medium = "Médio", Small = "Pequeno"))+
+  scale_fill_discrete(name="Anos do experimento", 
+                      labels=c("2006", "2007"))-> Plot05
+ggplot(Dalf_frag_yr1, aes(x=Fragmentos, y=log(Div_2)))+
+  geom_boxplot(aes(fill=Ano), alpha=0.3)+
+  labs(y="", x="", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_x_discrete(labels = c(Control = "Contínuo", Large = "Grande", Medium = "Médio", Small = "Pequeno"))+
+  scale_fill_discrete(name="Anos do experimento", 
+                      labels=c("2006", "2007"))-> Plot06
 
 ggarrange(Plot04, Plot05, Plot06, ncol=1, nrow=3, common.legend = TRUE, legend="right") -> Div.Alf.Frag.Ano.Fig
-Div.Alf.Frag.Ano.Fig
+annotate_figure(Div.Alf.Frag.Ano.Fig,
+                left = text_grob("Diversidade Alfa", rot = 90, size = 15),
+                bottom = text_grob("Tamanho dos fragmentos", size = 15))
 
 ```
 
 ## Gerando gráficos de Abundância
 
+Esses gráficos tem como objetivo entender melhor a distribuição dos dados em cada variável independente. Sendo assim, não vão aparecer no artigo propriamente dito.
+
 Construíndo a base:
-```{r, include = FALSE, message=FALSE, error=FALSE, warning=FALSE}
+```{r, message=FALSE, error=FALSE, warning=FALSE}
 seed_rain2 <- read_csv("Bases_de_dados/seed_oficial.csv")
 seed_rain2 <- rename(seed_rain2, "disp_mode" = 'disp-mode')
 
@@ -343,94 +372,143 @@ Dalf1 <- bind_cols(var_tree2, com1)
 
 Dalf1$abund<-as.integer(Dalf1$abund)
 Dalf1$Div_0<-as.integer(Dalf1$Div_0)
-
-str(Dalf1)
 ```
 
 ### *Abundância versus Tipos de Dispersão*
-```{r, warning=FALSE, message=FALSE}
+```{r Abund_disp, warning=FALSE, message=FALSE, fig.align='center'}
 ggplot(Dalf1, aes(disp_mode, log(abund), fill=disp_mode))+ 
   geom_jitter(aes(fill=disp_mode, col=disp_mode), alpha=0.5) +
   geom_boxplot(alpha=0.3)+
-  labs(y="log(Abundância)", x="Tipos de dispersão")
+  labs(y="log(Abundância)", x="Tipos de dispersão")+
+  scale_fill_discrete(name="Síndromes de Dispersão", 
+                      labels=c("Abióticas", "Zoocóricas"))+
+  scale_x_discrete(name="Síndromes de Dispersão",
+                       labels=c("Abióticas", "Zoocóricas"))+
+  scale_color_discrete(name="Síndromes de Dispersão",
+                       labels=c("Abióticas", "Zoocóricas"))
 ```
 
 ### *Abundância versus Tipos de Origem*
 
-```{r, warning=FALSE, message=FALSE}
+```{r Abund_orig, warning=FALSE, message=FALSE, fig.align='center'}
 ggplot(Dalf1, aes(origem, log(abund), fill=origem))+ 
   geom_jitter(aes(fill=origem, col=origem), alpha=0.5) +
   geom_boxplot(alpha=0.3)+
-  labs(y="log(Abundância)", x="Tipos de origem")
+  labs(y="log(Abundância)", x="Tipos de origem")+
+  scale_fill_discrete(name="Origem", 
+                      labels=c("Dispersada", "Local"))+
+  scale_color_discrete(name="Origem",
+                       labels=c("Dispersada", "Local"))+
+  scale_x_discrete(name="Origem",
+                       labels=c("Dispersada", "Local"))
 ```
 
 ### *Abundância versus Tamanho dos Fragmentos*
 
-```{r, warning=FALSE, message=FALSE}
+```{r Abund_frag, warning=FALSE, message=FALSE, fig.align='center'}
 ggplot(Dalf1, aes(frag_cat, log(abund), fill=frag_cat))+ 
   geom_jitter(aes(fill=frag_cat, col=frag_cat), alpha=0.5) +
   geom_boxplot(alpha=0.3)+
-  labs(y="log(Abundância)", x="Classe de Fragmentos")
+  labs(y="log(Abundância)", x="Classe de Fragmentos")+
+  scale_fill_discrete(name="Fragmentos", 
+                      labels=c("Contínuo", "Grande", "Médio", "Pequeno"))+
+  scale_color_discrete(name="Fragmentos", 
+                      labels=c("Contínuo", "Grande", "Médio", "Pequeno"))+
+  scale_x_discrete(name="Fragmentos", 
+                      labels=c("Contínuo", "Grande", "Médio", "Pequeno"))
 ```
 
 ### *Abundância versus Anos do experimento*
 
-```{r, warning=FALSE, message=FALSE}
+```{r Abund_Anos, warning=FALSE, message=FALSE, fig.align='center'}
 ggplot(Dalf1, aes(yr, log(abund), fill=yr))+ 
   geom_jitter(aes(fill=yr, col=yr), alpha=0.5) +
   geom_boxplot(alpha=0.3)+
-  labs(y="log(Abundância)", x="Anos") 
+  labs(y="log(Abundância)", x="Anos")+
+  scale_fill_discrete(name="Anos do experimento", 
+                      labels=c("2006", "2007"))+
+  scale_color_discrete(name="Anos do experimento", 
+                      labels=c("2006", "2007"))+
+  scale_x_discrete(name="Anos do experimento", 
+                      labels=c("2006", "2007"))
 ```
 
 ### *Abundância versus Origem e Tipos de Dispersão das sementes*
 
-```{r, warning=FALSE, message=FALSE}
+```{r Abund_Ori_Disp, warning=FALSE, message=FALSE, fig.align='center'}
 ggplot(Dalf1, aes(origem, log(abund), fill=disp_mode))+ 
   geom_jitter(aes(fill=disp_mode, col=origem), alpha=0.5) +
   geom_boxplot(alpha=0.3)+
-  labs(y="log(Abundância)", x="Origem das sementes")
+  labs(y="log(Abundância)", x="Origem das sementes")+
+  scale_fill_discrete(name="Síndromes de Dispersão", 
+                      labels=c("Abióticas", "Zoocóricas"))+
+  scale_color_discrete(name="Origem",
+                       labels=c("Dispersada", "Local"))+
+  scale_x_discrete(name="Origem",
+                       labels=c("Dispersada", "Local"))
 ```
 
 ### *Abundância versus Tipos de Dispersão das sementes e o Tamanho dos Fragmentos*
 
-```{r, warning=FALSE, message=FALSE}
+```{r Abund_Disp_Frag, warning=FALSE, message=FALSE, fig.align='center'}
 ggplot(Dalf1, aes(frag_cat, log(abund), fill=disp_mode))+ 
   geom_jitter(aes(fill=disp_mode, col=frag_cat), alpha=0.5) +
   geom_boxplot(alpha=0.3)+
-  labs(y="log(Abundância)", x="Classe de Fragmentos")
+  labs(y="log(Abundância)", x="Tamanho dos Fragmentos")+
+  scale_fill_discrete(name="Síndromes de Dispersão", 
+                      labels=c("Abióticas", "Zoocóricas"))+
+  scale_color_discrete(name="Fragmentos",
+                       labels=c("Contínuo", "Grande", "Médio", "Pequeno"))+
+  scale_x_discrete(labels=c("Contínuo", "Grande", "Médio", "Pequeno"))
 ```
 
 ### *Abundância versus Tipos de Dispersão das sementes e os Anos do experimento*
 
-```{r, warning=FALSE, message=FALSE}
+```{r Abund_Disp_ano, warning=FALSE, message=FALSE, fig.align='center'}
 ggplot(Dalf1, aes(yr, log(abund), fill=disp_mode))+ 
   geom_jitter(aes(fill=disp_mode, col=yr), alpha=0.5) +
   geom_boxplot(alpha=0.3)+
-  labs(y="log(Abundância)", x="Anos")
+  labs(y="log(Abundância)", x="Anos")+
+  scale_fill_discrete(name="Síndromes de Dispersão", 
+                      labels=c("Abióticas", "Zoocóricas"))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))
 ```
 
 ### *Abundância versus Tipos de Origem das sementes e os Anos do experimento*
-```{r, warning=FALSE, message=FALSE}
+```{r Abund_Ori_Ano, warning=FALSE, message=FALSE, fig.align='center'}
 ggplot(Dalf1, aes(yr, log(abund), fill=origem))+ 
   geom_jitter(aes(fill=origem, col=yr), alpha=0.5) +
   geom_boxplot(alpha=0.3)+
-  labs(y="log(Abundância)", x="Anos")
+  labs(y="log(Abundância)", x="Anos do experimento")+
+  scale_fill_discrete(name="Origem", 
+                      labels=c("Dispersadas", "Locais"))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels=c("2006", "2007"))
 ```
 
 
 ### *Abundância versus Tipos de Origem das sementes e o Tamanho dos Fragmentos*
 
-```{r, warning=FALSE, message=FALSE}
+```{r Abund_ori_frag, warning=FALSE, message=FALSE, fig.align='center'}
 ggplot(Dalf1, aes(frag_cat, log(abund), fill=origem))+ 
   geom_jitter(aes(fill=origem, col=frag_cat), alpha=0.5) +
   geom_boxplot(alpha=0.3)+
-  labs(y="log(Abundância)", x="Classe de Fragmentos")
+  labs(y="log(Abundância)", x="Classe de Fragmentos")+
+  scale_fill_discrete(name="Origem", 
+                      labels=c("Dispersadas", "Locais"))+
+  scale_color_discrete(name="Fragmentos",
+                       labels=c("Contínuo", "Grande", "Médio", "Pequeno"))+
+  scale_x_discrete(labels=c("Contínuo", "Grande", "Médio", "Pequeno"))
 ```
 
 
 ## Modelos
 
-Para verificar a interação entre as variáveis, decidímos contruir modelos lineares generalizados para cada diversidade. Devido aos diversos tratamentos, reduzimos as comunidades filtrando a sua origem e tipo de dispersão. Desse modo, obtemos 4 comunidades com sementes: Dispersadas e abióticas, Dispersadas e zoocóricas, Não dispersadas e abióticas e Não dispersadas e zoocóricas.
+Para verificar a interação entre as variáveis, decidímos contruir modelos lineares generalizados para cada expoente da diversidade de Hills. Devido aos diversos tratamentos, reduzimos as comunidades filtrando a sua origem e tipo de dispersão. Desse modo, obtemos 4 comunidades com sementes: Dispersadas e abióticas, Dispersadas e zoocóricas, Não dispersadas e abióticas e Não dispersadas e zoocóricas.
 
 Para cada comunidade buscamos calcular a diversidade verdadeira e posteriormente, submetemos cada diversidade como nossa variável resposta nos GLM's. Com a redução das variáveis independentes devido ao filtro feito nas comunidades, só ficamos com os fragmentos e o ano, deixando a fórmula bastante simples: `diversidade 0, 1 e 2 ~ fragmentos*ano`.
 
@@ -582,7 +660,7 @@ com_nd_zoo[is.na(com_nd_zoo)] <- 0
 
 Vale lembrar que só temos duas variáveis independentes: `Fragmentos` e `Ano`, enquanto que possuímos 3 variáveis respostas: `Diversidade 0, 1 e 2`. Vamos começar pela diversidade 0. Além do modelos, vamos ver se os dados são dispersados usando o pacote `performance`. Caso haja alguma superdispersão, usaremos ao invés de poisson, binomial negativo para termos uma melhor adequação do modelo a realidade dos dados
 
-```{r, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
+```{r Modelos_div0, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
 #Dispersadas abióticas
 m_d_abio_0<-glm(Div_0~Ano*Fragmentos, family = "poisson", data = com_d_abio)
 summary(m_d_abio_0)
@@ -618,24 +696,11 @@ tab_model(m_d_abio_0, m_d_zoo_0_1, m_nd_abio_0, m_nd_zoo_0, auto.label = FALSE, 
 
 ```
 
-Encontramos que para as sementes abióticas tanto de origem dispersada quanto local, o ano e o fragmento não apresentam qualquer mudança significativa na variável resposta. Esse padrão também foi encontrado para as sementes zoocóricas não dispersadas. A única comunidade que se mostrou diferente com o glm `m_d_zoo_0` foi a das sementes zoocóricas dispersadas, na qual o fragmento médio teve um aumento da diversidade 0 em relação ao fragmento controle. Ainda, a interação entre o ano e o fragmento mostrou que houve uma diminuição significativa da riqueza no ano de 2007 para os fragmentos médio e pequeno em comparação com o ano de 2006. Entretanto, quando olhamos essa mesma comunidade usando a família binomial negativa `m_d_zoo_0_1` que lida melhor com a superdispersão, encontramos a ausência de interações significativas. 
-
-```{r}
-#Grafico dos Fragmentos
-ggplot(com_d_zoo, aes(Fragmentos, Div_0, fill=Fragmentos))+ 
-  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(y="log da Diversidade", x="Classe de Fragmentos", caption = "Q=0")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))
-```
-
+Encontramos que para as sementes abióticas tanto de origem dispersada quanto local, o ano e o fragmento não apresentam qualquer mudança significativa na variável resposta. Esse padrão também foi encontrado para as sementes zoocóricas não dispersadas. A única comunidade que se mostrou diferente com o glm foi a das sementes zoocóricas dispersadas `m_d_zoo_0`, na qual o fragmento médio teve um aumento da diversidade 0 em relação ao fragmento controle. Ainda, a interação entre o ano e o fragmento mostrou que houve uma diminuição significativa da riqueza no ano de 2007 para os fragmentos médio e pequeno em comparação com o ano de 2006. Entretanto, quando olhamos essa mesma comunidade usando a família binomial negativa `m_d_zoo_0_1` que lida melhor com a superdispersão, encontramos a ausência de interações significativas. Sendo assim, a fragmentação e superprodução não interferem na riqueza de espécies 
 
 As outras variáveis respostas são a diversidade 1 e 2. Diferentemente da diversidade 0, essas variáveis apresentam números decimais e devido a isso não podemos usar o glm com poisson. Distribuições como gama e normal, aceitam números decimais. Entretanto, a gamma não aceita números negativos ou zeros, e isso impossibilita a sua utilização nos nossos dados. Desse modo, optamos por utilizar a distribuição normal.
 
-```{r, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
+```{r Modelos_div1, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
 glm_d_abio_1<-glm(Div_1~Ano*Fragmentos, family = "gaussian", data = com_d_abio)
 summary(glm_d_abio_1)
 glm_d_zoo_1<-glm(Div_1~Ano*Fragmentos, family = "gaussian", data = com_d_zoo)
@@ -653,32 +718,10 @@ tab_model(glm_d_abio_1, glm_d_zoo_1, glm_nd_abio_1, glm_nd_zoo_1, auto.label = F
 
 ```
 
-Os resultados são diferentes quando comparamos com os resultados obtidos na diversidade 0. Aqui, as sementes não dispersadas tanto zoocóricas quanto abióticas não apresentaram qualquer mudança significativa na diversidade 1 (mais sensível as espécies raras). As sementes dispersadas abióticas apresentaram um aumento da diversidade sensível as espécies raras nos fragmentos médio e pequeno quando comparado ao fragmento controle. Isso pode ser devido a espécies que outrotra não estavam ali e, com a fragmentação, passaram a ocupar o local, sendo encaradas como raras pelo modelo. As sementes dispersadas zoocóricas apresentaram uma diferença significativa no tamanho médio quando comparado ao tamanho controle, com o tamanho médio contendo diversidade de espécies raras maior que o controle. A interação das variáveis apresentou-se significativa apenas para o tamanho médio. Ele contém menos diversidade quando comparado ao tamanho médio no ano de 2006, muito possivelmente devido a reprodução supraanual.
+Os resultados são diferentes quando comparamos com os resultados obtidos na diversidade 0. Aqui, as sementes não dispersadas tanto zoocóricas quanto abióticas não apresentaram qualquer mudança significativa na diversidade 1 (mais sensível as espécies raras). As sementes dispersadas abióticas apresentaram um aumento da diversidade sensível as espécies raras nos fragmentos médio e pequeno quando comparado ao fragmento controle. As sementes dispersadas zoocóricas apresentaram uma diferença significativa no tamanho médio quando comparado ao tamanho controle, com o tamanho médio contendo diversidade de espécies raras maior que o controle. A interação das variáveis apresentou-se significativa apenas para o tamanho médio.
 
-```{r, warning=FALSE, message=FALSE}
-#Grafico dos Fragmentos
-#dispersada abio
-ggplot(com_d_abio, aes(Fragmentos, log(Div_1+1), fill=Fragmentos))+ 
-  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(y="log da Diversidade", x="Classe de Fragmentos", caption = "Q=1")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))
-#dispersada zoo
-ggplot(com_d_zoo, aes(Fragmentos, log(Div_1+1), fill=Fragmentos))+ 
-  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(y="log da Diversidade", x="Classe de Fragmentos", caption = "Q=1")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))
-```
-
-Agora os modelos com Diversidade_2
-```{r, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
+Agora os modelos com Diversidade q=2
+```{r Modelo_Div2, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}
 #glm
 glm_d_abio_2<-glm(Div_2~Ano*Fragmentos, family = "gaussian", data = com_d_abio)
 summary(glm_d_abio_2)
@@ -698,149 +741,199 @@ tab_model(glm_d_abio_2, glm_d_zoo_2, glm_nd_abio_2, glm_nd_zoo_2, auto.label = F
 
 Encontramos algo semelhante com a diversidade anterior. Para a diversidade sensível a espécies dominantes, encontramos que para as sementes com origem não dispersada, não existe nenhuma relação signficativa entre nossas variáveis independetes a nossa variável resposta. Entretanto, para as sementes dispersadas houve uma mudança significativa. As dispersadas abióticas apresentaram uma diversidade sensível a espécies dominantes maior nos fragmentos pequeno e médio em relação ao fragmento controle. Enquanto que para as sementes zoocóricas apenas a interação entre o ano e o fragmento médio se apresentou significativa, com o fragmento médio de 2007 contendo menor diversidade de espécies dominantes que o fragmento médio do ano anterior. Novamente, acreditamos que isso se deva a reprodução supraanual. 
 
-```{r}
-#Grafico dos Fragmentos
-#dispersada abio
-ggplot(com_d_abio, aes(Fragmentos, log(Div_2+1), fill=Fragmentos))+ 
-  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(y="log da Diversidade", x="Classe de Fragmentos", caption = "Q=2")+
+
+Agora vamos criar o gráficos com todas as variáveis independentes juntas.
+
+```{r Fig_4_Disc, fig.align='center', fig.dim = c(10, 10), message=FALSE, warning=FALSE, error=FALSE}
+#Graficos das sementes dispersadas abioticas  
+ggplot(com_d_abio, aes(x=as.factor(Fragmentos), y=log10(Div_0+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="Abióticas Dispersadas", y="", x="", caption = "Q=0")+
   theme(plot.caption=element_text(size=10,
                                   face ="bold.italic",
                                   hjust = 1.0,
-                                  vjust = 9.0))
-#dispersada zoo
-ggplot(com_d_zoo, aes(Fragmentos, log(Div_2+1), fill=Fragmentos))+ 
-  geom_jitter(aes(fill=Fragmentos, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(y="log da Diversidade", x="Classe de Fragmentos", caption = "Q=2")+
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_abio_0
+ggplot(com_d_abio, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="", y="", x="", caption = "Q=1")+
   theme(plot.caption=element_text(size=10,
                                   face ="bold.italic",
                                   hjust = 1.0,
-                                  vjust = 9.0))
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_abio_1
+ggplot(com_d_abio, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="", y="", x="", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_abio_2
+
+#Grafico das sementes locais abioticas
+ggplot(com_nd_abio, aes(x=as.factor(Fragmentos), y=log10(Div_0+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="Abióticas Locais", y="", x="", caption = "Q=0")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_abio_0
+ggplot(com_nd_abio, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="", y="", x="", caption = "Q=1")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_abio_1
+ggplot(com_nd_abio, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="", y="", x="", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_abio_2
+
+#Grafico das sementes dispersadas zoocoricas
+ggplot(com_d_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_0+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="Zoocóricas Dispersadas", y="", x="", caption = "Q=0")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_zoo_0
+ggplot(com_d_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="", y="", x="", caption = "Q=1")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_zoo_1
+ggplot(com_d_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="", y="", x="", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_zoo_2
+
+# Grafico de sementes locais zoocoricas
+ggplot(com_nd_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_0+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="Zoocóricas Locais", y="", x="", caption = "Q=0")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_zoo_0
+ggplot(com_nd_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="", y="", x="", caption = "Q=1")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_zoo_1
+ggplot(com_nd_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, col=Ano))+
+  geom_jitter(alpha=0.2) +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
+               geom="pointrange", position = position_dodge(0.5))+
+  stat_summary(fun="mean", geom="line", size=1.1,
+               aes(linetype = Ano), position = position_dodge(0.5), show.legend = FALSE)+
+  labs(title="", y="", x="", caption = "Q=2")+
+  theme(plot.caption=element_text(size=10,
+                                  face ="bold.italic",
+                                  hjust = 1.0,
+                                  vjust = 9.0))+
+  scale_color_discrete(name="Anos do experimento",
+                       labels=c("2006", "2007"))+
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_zoo_2
+
+#Juntando todos os graficos
+ggarrange(d_abio_0, d_abio_1, d_abio_2, d_zoo_0, d_zoo_1, d_zoo_2, nd_abio_0, nd_abio_1, nd_abio_2,
+          nd_zoo_0, nd_zoo_1, nd_zoo_2, ncol=3, nrow=4, common.legend = TRUE, legend="right") -> Fig_4_Disc
+#Adicionando anotações a figura
+annotate_figure(Fig_4_Disc,
+                left = text_grob("Diversidade", rot = 90, size = 15),
+                bottom = text_grob("Tamanho dos fragmentos", size = 15))
 ```
 
-
-Agora vamos para os gráficos com as variáveis independentes juntas.
-
-```{r, fig.show='asis', collapse=TRUE, message=FALSE, warning=FALSE}
-#Gráfico para a Diversidade 0
-ggplot(com_d_abio, aes(x=Fragmentos, y=log10(Div_0+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Abióticas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=0")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P8
-ggplot(com_d_zoo, aes(x=Fragmentos, y=log10(Div_0+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Zoocóricas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=0")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P9
-ggplot(com_nd_abio, aes(x=Fragmentos, y=log10(Div_0+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Abióticas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=0")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P10
-ggplot(com_nd_zoo, aes(x=Fragmentos, y=log10(Div_0+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Zoocóricas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=0")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P11
-library(ggpubr)
-
-ggarrange(P8, P9, P10, P11, ncol=2, nrow=2, common.legend = TRUE, legend="bottom") -> Imagem3
-Imagem3
-
-#Gráfico para a Diversidade 1
-ggplot(com_d_abio, aes(x=Fragmentos, y=log10(Div_1+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Abióticas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=1")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P12
-ggplot(com_d_zoo, aes(x=Fragmentos, y=log10(Div_1+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Zoocóricas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=1")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P13
-ggplot(com_nd_abio, aes(x=Fragmentos, y=log10(Div_1+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Abióticas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=1")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P14
-ggplot(com_nd_zoo, aes(x=Fragmentos, y=log10(Div_1+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Zoocóricas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=1")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P15
-
-ggarrange(P12, P13, P14, P15, ncol=2, nrow=2, common.legend = TRUE, legend="bottom") -> Imagem4
-Imagem4
-
-#Gráfico para a Diversidade 2
-ggplot(com_d_abio, aes(x=Fragmentos, y=log10(Div_2+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Abióticas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=2")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P16
-ggplot(com_d_zoo, aes(x=Fragmentos, y=log10(Div_2+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Zoocóricas Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=2")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P17
-ggplot(com_nd_abio, aes(x=Fragmentos, y=log10(Div_2+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Abióticas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=2")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P18
-ggplot(com_nd_zoo, aes(x=Fragmentos, y=log10(Div_2+1), fill=Ano))+
-  geom_jitter(aes(fill=Ano, col=Fragmentos), alpha=0.5) +
-  geom_boxplot(alpha=0.3)+
-  labs(title="Sementes Zoocóricas Não Dispersadas", y="Log da Diversidade", x="Fragmentos", caption = "Q=2")+
-  theme(plot.caption=element_text(size=10,
-                                  face ="bold.italic",
-                                  hjust = 1.0,
-                                  vjust = 9.0))-> P19
-
-ggarrange(P16, P17, P18, P19, ncol=2, nrow=2, common.legend = TRUE, legend="bottom") -> Imagem5
-Imagem5
-
-```
 
 ## Curva de Acumulação
 
-```{r}
+```{r Curva_Acum_geral, fig.align='center'}
 seed_rain2$yr<-as.factor(seed_rain2$yr)
 
 #Criando as comunidades
@@ -873,12 +966,14 @@ ggplot(data_cds, aes(as.factor(area), riqPeqGrande, group=1, fill=hectares))+
   theme(legend.position = "right",
         legend.background = element_rect(fill="gray90")) +
   scale_size_continuous(name = "Hectares",
-                        guide = "legend")
+                        breaks = c(2.3, 2.9, 22.0, 29.0, 5000, 640),
+                        labels = c("Pequeno", "Pequeno", "Médio", "Médio", 
+                                   "Grande","Controle"))
 ```
 
 Agora vamos diferenciar a acumulação pelo ano do experimento
 
-```{r}
+```{r Curva_Accum_anos, fig.align='center'}
 seed_rain2 %>% 
   group_by(yr, site) %>% 
   summarise_if(is.numeric, sum)->t1
