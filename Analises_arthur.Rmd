@@ -690,9 +690,7 @@ m_d_zoo_0_1<-glm.nb(Div_0~Ano*Fragmentos, data = com_d_abio)
 summary(m_d_zoo_0_1)
 
 library(sjPlot)
-tab_model(m_d_abio_0, m_d_zoo_0_1, m_nd_abio_0, m_nd_zoo_0, auto.label = FALSE, show.ci = FALSE, file = "Tab_div_0.odt",
-          dv.labels = c("Sementes Dispersada Abiotica", "Sementes Dispersada Zoocorica", "Sementes Locais Abioticas",
-                        "Sementes Locais Zoocoricas"))
+tab_model(m_d_abio_0, m_d_zoo_0_1, m_nd_abio_0, m_nd_zoo_0, auto.label = FALSE, show.ci = FALSE, file = "Tab_div_0.odt", dv.labels = c("Sementes Dispersada Abiotica", "Sementes Dispersada Zoocorica", "Sementes Locais Abioticas", "Sementes Locais Zoocoricas"))
 
 ```
 
@@ -718,7 +716,7 @@ tab_model(glm_d_abio_1, glm_d_zoo_1, glm_nd_abio_1, glm_nd_zoo_1, auto.label = F
 
 ```
 
-Os resultados são diferentes quando comparamos com os resultados obtidos na diversidade 0. Aqui, as sementes não dispersadas tanto zoocóricas quanto abióticas não apresentaram qualquer mudança significativa na diversidade 1 (mais sensível as espécies raras). As sementes dispersadas abióticas apresentaram um aumento da diversidade sensível as espécies raras nos fragmentos médio e pequeno quando comparado ao fragmento controle. As sementes dispersadas zoocóricas apresentaram uma diferença significativa no tamanho médio quando comparado ao tamanho controle, com o tamanho médio contendo diversidade de espécies raras maior que o controle. A interação das variáveis apresentou-se significativa apenas para o tamanho médio.
+Os resultados são diferentes quando comparamos com os resultados obtidos na diversidade 0. Aqui, as sementes não dispersadas tanto zoocóricas quanto abióticas não apresentaram qualquer mudança significativa na diversidade 1 (mais sensível as espécies comuns). As sementes dispersadas abióticas apresentaram um aumento da diversidade sensível as espécies comuns nos fragmentos médio e pequeno quando comparado ao fragmento controle. As sementes dispersadas zoocóricas apresentaram uma diferença significativa no tamanho médio quando comparado ao tamanho controle, com o tamanho médio contendo diversidade de espécies comuns maior que o controle. A interação das variáveis apresentou-se significativa apenas para o tamanho médio.
 
 Agora os modelos com Diversidade q=2
 ```{r Modelo_Div2, echo=TRUE, warning=FALSE, message=FALSE, collapse=TRUE}

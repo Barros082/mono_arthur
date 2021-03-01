@@ -2698,9 +2698,7 @@ summary(m_d_zoo_0_1)
 ##  2 x log-likelihood:  -125.7
 
 library(sjPlot)
-tab_model(m_d_abio_0, m_d_zoo_0_1, m_nd_abio_0, m_nd_zoo_0, auto.label = FALSE, show.ci = FALSE, file = &quot;Tab_div_0.odt&quot;,
-          dv.labels = c(&quot;Sementes Dispersada Abiotica&quot;, &quot;Sementes Dispersada Zoocorica&quot;, &quot;Sementes Locais Abioticas&quot;,
-                        &quot;Sementes Locais Zoocoricas&quot;))</code></pre>
+tab_model(m_d_abio_0, m_d_zoo_0_1, m_nd_abio_0, m_nd_zoo_0, auto.label = FALSE, show.ci = FALSE, file = &quot;Tab_div_0.odt&quot;, dv.labels = c(&quot;Sementes Dispersada Abiotica&quot;, &quot;Sementes Dispersada Zoocorica&quot;, &quot;Sementes Locais Abioticas&quot;, &quot;Sementes Locais Zoocoricas&quot;))</code></pre>
 <table style="border-collapse:collapse; border:none;">
 <tr>
 <th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
@@ -3461,7 +3459,7 @@ R<sup>2</sup> Nagelkerke
 </td>
 </tr>
 </table>
-<p>Os resultados são diferentes quando comparamos com os resultados obtidos na diversidade 0. Aqui, as sementes não dispersadas tanto zoocóricas quanto abióticas não apresentaram qualquer mudança significativa na diversidade 1 (mais sensível as espécies raras). As sementes dispersadas abióticas apresentaram um aumento da diversidade sensível as espécies raras nos fragmentos médio e pequeno quando comparado ao fragmento controle. As sementes dispersadas zoocóricas apresentaram uma diferença significativa no tamanho médio quando comparado ao tamanho controle, com o tamanho médio contendo diversidade de espécies raras maior que o controle. A interação das variáveis apresentou-se significativa apenas para o tamanho médio.</p>
+<p>Os resultados são diferentes quando comparamos com os resultados obtidos na diversidade 0. Aqui, as sementes não dispersadas tanto zoocóricas quanto abióticas não apresentaram qualquer mudança significativa na diversidade 1 (mais sensível as espécies comuns). As sementes dispersadas abióticas apresentaram um aumento da diversidade sensível as espécies comuns nos fragmentos médio e pequeno quando comparado ao fragmento controle. As sementes dispersadas zoocóricas apresentaram uma diferença significativa no tamanho médio quando comparado ao tamanho controle, com o tamanho médio contendo diversidade de espécies comuns maior que o controle. A interação das variáveis apresentou-se significativa apenas para o tamanho médio.</p>
 <p>Agora os modelos com Diversidade q=2</p>
 <pre class="r"><code>#glm
 glm_d_abio_2&lt;-glm(Div_2~Ano*Fragmentos, family = &quot;gaussian&quot;, data = com_d_abio)
