@@ -931,7 +931,7 @@ annotate_figure(Fig_4_Disc,
 
 ## Curva de Acumulação
 
-```{r Curva_Acum_geral, fig.align='center'}
+```{r Curva_Acum_geral, fig.align='center', warning=FALSE, message=FALSE, error=FALSE}
 seed_rain2$yr<-as.factor(seed_rain2$yr)
 
 #Criando as comunidades
@@ -955,23 +955,26 @@ data_cds<-rename(data_cds, "riqGrandPeq"=a1.richness,  "riqPeqGrande"=a2.richnes
 paged_table(data_cds)
 
 #ggplot
-ggplot(data_cds, aes(as.factor(area), riqPeqGrande, group=1, fill=hectares))+
-  geom_line()+
-  geom_point(size=log(as.numeric(data_cds$hectares)), alpha=0.5)+
-  geom_line(aes(as.factor(area), riqGrandPeq, group=1), col="#CC0000")+
-  geom_point(aes(as.factor(area), riqGrandPeq, group=1), col="#CC0000", size=log(rev(as.numeric(data_cds$hectares))), alpha=0.5)+
+ggplot(data_cds, aes(as.factor(area), riqPeqGrande, group=1))+
+  geom_line(col="#9966FF")+
+  geom_point(aes(size=log(as.numeric(data_cds$hectares))), col="#9966FF", alpha=0.5)+
+  geom_line(aes(as.factor(area), riqGrandPeq, group=1), col="#CC3366")+
+  geom_point(aes(as.factor(area), riqGrandPeq, group=1, size=log(rev(as.numeric(data_cds$hectares)))), col="#CC3366",
+             alpha=0.5)+
+  scale_size_continuous(range=c(1,8), name = "Hectares",
+                        breaks = c(2, 4, 6, 8),
+                        labels = c("2"="Pequeno",
+                        "4"="Médio",
+                        "6"="Grande",
+                        "8"="Contínuo"))+
   labs(y="Número de espécies acumuladas", x="Área amostrada (m²)")+
   theme(legend.position = "right",
-        legend.background = element_rect(fill="gray90")) +
-  scale_size_continuous(name = "Hectares",
-                        breaks = c(2.3, 2.9, 22.0, 29.0, 5000, 640),
-                        labels = c("Pequeno", "Pequeno", "Médio", "Médio", 
-                                   "Grande","Controle"))
+        legend.background = element_rect(fill="gray90"))
 ```
 
 Agora vamos diferenciar a acumulação pelo ano do experimento
 
-```{r Curva_Accum_anos, fig.align='center'}
+```{r Curva_Accum_anos, fig.align='center', warning=FALSE, message=FALSE, error=FALSE, fig.dim = c(8, 8)}
 seed_rain2 %>% 
   group_by(yr, site) %>% 
   summarise_if(is.numeric, sum)->t1
@@ -1000,12 +1003,10 @@ ac_t07_desc<-accumresult(t07_desc[,c(-1:-3)], method = "collector")
 data_t06 <- data.frame(t06$yr, ac_t06$richness, ac_t06_desc$richness)
 data_t06$area<-seq(400, 3200, 400)
 data_t06 <- rename(data_t06, "Ano" = t06.yr, "riq_t06"=ac_t06.richness,  "riq_t06_desc"=ac_t06_desc.richness)
-data_t06
 
 data_t07 <- data.frame(t07$yr, ac_t07$richness, ac_t07_desc$richness)
 data_t07$area<-seq(400, 3200, 400)
 data_t07 <- rename(data_t07, "Ano" = t07.yr, "riq_t07"=ac_t07.richness,  "riq_t07_desc"=ac_t07_desc.richness)
-data_t07
 
 #Obs:Não tem importância que a ordem de sites esteja invertida, já que no gráfico o que aparecem são na verdade, classificações dos hectares feitas com o log. Formando apenas 4 e não 6.
 
@@ -1019,34 +1020,48 @@ data_t07$hectares <- c(rep("2.3", 1), rep("2.9", 1), rep("22.0", 1), rep("29.0",
 
 #Criando gráficos
 
-p21<-ggplot(data_t06, aes(as.factor(area), riq_t06_desc, group=1, fill=hectares))+
-  geom_line()+
-  geom_point(size=log(as.numeric(data_t06$hectares)), alpha=0.5)+
-  geom_line(aes(as.factor(area), riq_t06, group=1), col="#CC0000")+
-  geom_point(aes(as.factor(area), riq_t06, group=1), col="#CC0000", size=log(rev(as.numeric(data_t06$hectares))), alpha=0.5)+
-  labs(y="Número de espécies acumuladas", x="Área amostrada (m)", caption = "2006")+
+p21<-ggplot(data_t06, aes(as.factor(area), riq_t06_desc, group=1))+
+  geom_line(col="#9966FF")+
+  geom_point(aes(size=log(as.numeric(data_t06$hectares))), col="#9966FF", alpha=0.5)+
+  geom_line(aes(as.factor(area), riq_t06, group=1), col="#CC3366")+
+  geom_point(aes(as.factor(area), riq_t06, group=1, size=log(rev(as.numeric(data_t06$hectares)))), col="#CC3366",
+             alpha=0.5)+
+  scale_size_continuous(range=c(1,8), name = "Hectares",
+                        breaks = c(2, 4, 6, 8),
+                        labels = c("2"="Pequeno",
+                        "4"="Médio",
+                        "6"="Grande",
+                        "8"="Contínuo"))+
+  labs(y="", x="", caption = "2006")+
   theme(legend.position = "right",
+        legend.background = element_rect(fill="gray90"),
         plot.caption=element_text(size=10,
                                   face ="bold.italic",
                                   hjust = 1.0,
-                                  vjust = 9.0)) +
-  scale_size_continuous(name = "Hectáres",
-                        guide = "legend")
+                                  vjust = 9.0))
 
-p22<-ggplot(data_t07, aes(as.factor(area), riq_t07_desc, group=1, fill=hectares))+
-  geom_line()+
-  geom_point(size=log(as.numeric(data_t07$hectares)), alpha=0.5)+
-  geom_line(aes(as.factor(area), riq_t07, group=1), col="#CC0000")+
-  geom_point(aes(as.factor(area), riq_t07, group=1), col="#CC0000", size=log(rev(as.numeric(data_t07$hectares))), alpha=0.5)+
-  labs(y="Número de espécies acumuladas", x="Área amostrada (m)", caption = "2007")+
+p22<-ggplot(data_t07, aes(as.factor(area), riq_t07_desc, group=1))+
+  geom_line(col="#9966FF")+
+  geom_point(aes(size=log(as.numeric(data_t07$hectares))), col="#9966FF", alpha=0.5)+
+  geom_line(aes(as.factor(area), riq_t07, group=1), col="#CC3366")+
+  geom_point(aes(as.factor(area), riq_t07, group=1, size=log(rev(as.numeric(data_t07$hectares)))), col="#CC3366",
+             alpha=0.5)+
+  scale_size_continuous(range=c(1,8), name = "Hectares",
+                        breaks = c(2, 4, 6, 8),
+                        labels = c("2"="Pequeno",
+                        "4"="Médio",
+                        "6"="Grande",
+                        "8"="Contínuo"))+
+  labs(y="", x="", caption = "2007")+
   theme(legend.position = "right",
+        legend.background = element_rect(fill="gray90"),
         plot.caption=element_text(size=10,
                                   face ="bold.italic",
                                   hjust = 1.0,
-                                  vjust = 9.0)) +
-  scale_size_continuous(name = "Hectáres",
-                        guide = "legend")
+                                  vjust = 9.0))
 
 ggarrange(p21, p22, ncol=1, nrow=2, common.legend = TRUE, legend="right") -> Imagem6
-Imagem6
+annotate_figure(Imagem6,
+                left = text_grob("Número de espécies acumuladas", rot = 90, size = 14),
+                bottom = text_grob("Área amostrada (m²)", size = 14))
 ```
