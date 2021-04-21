@@ -462,6 +462,21 @@ ggplot(Dalf1, aes(frag_cat, log(abund), fill=disp_mode))+
   scale_x_discrete(labels=c("Contínuo", "Grande", "Médio", "Pequeno"))
 ```
 
+### *Abundância versus Anos do experimento e o Tamanho dos Fragmentos*
+
+```{r Abund_Ano_Frag, warning=FALSE, message=FALSE, fig.align='center'}
+ggplot(Dalf1, aes(frag_cat, log(abund), fill=yr))+ 
+  geom_jitter(aes(fill=yr, col=frag_cat), alpha=0.5) +
+  geom_boxplot(alpha=0.3)+
+  labs(y="log(Abundância)", x="Tamanho dos Fragmentos")+
+  scale_fill_discrete(name="Anos do experimento", 
+                      labels=c("2006", "2007"))+
+  scale_color_discrete(name="Fragmentos",
+                       labels=c("Contínuo", "Grande", "Médio", "Pequeno"))+
+  scale_x_discrete(labels=c("Contínuo", "Grande", "Médio", "Pequeno"))
+```
+
+
 ### *Abundância versus Tipos de Dispersão das sementes e os Anos do experimento*
 
 ```{r Abund_Disp_ano, warning=FALSE, message=FALSE, fig.align='center'}
@@ -677,20 +692,8 @@ summary(m_nd_abio_0)
 m_nd_zoo_0<-glm(Div_0~Ano*Fragmentos, family = "poisson", data = com_nd_zoo)
 summary(m_nd_zoo_0)
 
-library(performance)
-check_overdispersion(m_d_abio_0)
-check_overdispersion(m_d_zoo_0)
-check_overdispersion(m_nd_abio_0)
-check_overdispersion(m_nd_zoo_0)
-
-#Apenas o modelos das dispersadas zoocóricas apresentaram superdispersão, devido a isso, refizemos o modelo agora com o binomial negativo
-library(MASS)
-
-m_d_zoo_0_1<-glm.nb(Div_0~Ano*Fragmentos, data = com_d_abio)
-summary(m_d_zoo_0_1)
-
 library(sjPlot)
-tab_model(m_d_abio_0, m_d_zoo_0_1, m_nd_abio_0, m_nd_zoo_0, auto.label = FALSE, show.ci = FALSE, file = "Tab_div_0.odt", dv.labels = c("Sementes Dispersada Abiotica", "Sementes Dispersada Zoocorica", "Sementes Locais Abioticas", "Sementes Locais Zoocoricas"))
+tab_model(m_d_abio_0, m_d_zoo_0, m_nd_abio_0, m_nd_zoo_0, auto.label = FALSE, show.ci = FALSE, file = "Tab_div_0.odt", dv.labels = c("Sementes Dispersada Abiotica", "Sementes Dispersada Zoocorica", "Sementes Locais Abioticas", "Sementes Locais Zoocoricas"))
 
 ```
 
@@ -710,9 +713,11 @@ summary(glm_nd_zoo_1)
 
 library(sjPlot)
 
-tab_model(glm_d_abio_1, glm_d_zoo_1, glm_nd_abio_1, glm_nd_zoo_1, auto.label = FALSE, show.ci = FALSE, file = "Tab_div_1.odt",
-          dv.labels = c("Sementes Dispersada Abiotica", "Sementes Dispersada Zoocorica", "Sementes Locais Abioticas",
-                        "Sementes Locais Zoocoricas"))
+tab_model(glm_d_abio_1, glm_d_zoo_1, glm_nd_abio_1, glm_nd_zoo_1, auto.label = FALSE, show.ci = FALSE,
+          file = "Tab_div_1.odt", dv.labels = c("Sementes Dispersada Abiotica",
+                                                "Sementes Dispersada Zoocorica",
+                                                "Sementes Locais Abioticas",
+                                                "Sementes Locais Zoocoricas"))
 
 ```
 
@@ -731,9 +736,11 @@ glm_nd_zoo_2<-glm(Div_2~Ano*Fragmentos, family = "gaussian", data = com_nd_zoo)
 summary(glm_nd_zoo_2)
 
 library(sjPlot)
-tab_model(glm_d_abio_2, glm_d_zoo_2, glm_nd_abio_2, glm_nd_zoo_2, auto.label = FALSE, show.ci = FALSE, file = "Tab_div_2.odt",
-          dv.labels = c("Sementes Dispersada Abiotica", "Sementes Dispersada Zoocorica", "Sementes Locais Abioticas",
-                        "Sementes Locais Zoocoricas"))
+tab_model(glm_d_abio_2, glm_d_zoo_2, glm_nd_abio_2, glm_nd_zoo_2, auto.label = FALSE, show.ci = FALSE,
+          file = "Tab_div_2.odt", dv.labels = c("Sementes Dispersada Abiotica",
+                                                "Sementes Dispersada Zoocorica",
+                                                "Sementes Locais Abioticas",
+                                                "Sementes Locais Zoocoricas"))
 
 ```
 
@@ -757,7 +764,10 @@ ggplot(com_d_abio, aes(x=as.factor(Fragmentos), y=log10(Div_0+1), group=Ano, col
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_abio_0
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", 
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=0.6, label="A)",
+           color="black")->d_abio_0
 ggplot(com_d_abio, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, col=Ano))+
   geom_jitter(alpha=0.2) +
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
@@ -771,7 +781,10 @@ ggplot(com_d_abio, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, col
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_abio_1
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", 
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=0.6, label="B)",
+           color="black")->d_abio_1
 ggplot(com_d_abio, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, col=Ano))+
   geom_jitter(alpha=0.2) +
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
@@ -785,7 +798,10 @@ ggplot(com_d_abio, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, col
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_abio_2
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande",
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=0.6, label="C)",
+           color="black")->d_abio_2
 
 #Grafico das sementes locais abioticas
 ggplot(com_nd_abio, aes(x=as.factor(Fragmentos), y=log10(Div_0+1), group=Ano, col=Ano))+
@@ -801,7 +817,10 @@ ggplot(com_nd_abio, aes(x=as.factor(Fragmentos), y=log10(Div_0+1), group=Ano, co
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_abio_0
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande",
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=0.6, label="G)",
+           color="black")->nd_abio_0
 ggplot(com_nd_abio, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, col=Ano))+
   geom_jitter(alpha=0.2) +
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
@@ -815,7 +834,10 @@ ggplot(com_nd_abio, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, co
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_abio_1
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande",
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=0.6, label="H)",
+           color="black")->nd_abio_1
 ggplot(com_nd_abio, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, col=Ano))+
   geom_jitter(alpha=0.2) +
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
@@ -829,7 +851,10 @@ ggplot(com_nd_abio, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, co
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_abio_2
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande",
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=0.6, label="I)",
+           color="black")->nd_abio_2
 
 #Grafico das sementes dispersadas zoocoricas
 ggplot(com_d_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_0+1), group=Ano, col=Ano))+
@@ -845,7 +870,10 @@ ggplot(com_d_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_0+1), group=Ano, col=
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_zoo_0
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande",
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=1.35, label="D)",
+           color="black")->d_zoo_0
 ggplot(com_d_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, col=Ano))+
   geom_jitter(alpha=0.2) +
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
@@ -859,7 +887,10 @@ ggplot(com_d_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, col=
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_zoo_1
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande",
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=1, label="E)",
+           color="black")->d_zoo_1
 ggplot(com_d_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, col=Ano))+
   geom_jitter(alpha=0.2) +
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
@@ -873,7 +904,10 @@ ggplot(com_d_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, col=
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->d_zoo_2
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande",
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=1, label="F)",
+           color="black")->d_zoo_2
 
 # Grafico de sementes locais zoocoricas
 ggplot(com_nd_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_0+1), group=Ano, col=Ano))+
@@ -889,7 +923,10 @@ ggplot(com_nd_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_0+1), group=Ano, col
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_zoo_0
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande",
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=0.95, label="J)",
+           color="black")->nd_zoo_0
 ggplot(com_nd_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, col=Ano))+
   geom_jitter(alpha=0.2) +
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
@@ -903,7 +940,10 @@ ggplot(com_nd_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_1+1), group=Ano, col
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_zoo_1
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande",
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=0.7, label="K)",
+           color="black")->nd_zoo_1
 ggplot(com_nd_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, col=Ano))+
   geom_jitter(alpha=0.2) +
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1),
@@ -917,7 +957,10 @@ ggplot(com_nd_zoo, aes(x=as.factor(Fragmentos), y=log10(Div_2+1), group=Ano, col
                                   vjust = 9.0))+
   scale_color_discrete(name="Anos do experimento",
                        labels=c("2006", "2007"))+
-  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande", "Medium"="Médio", "Small"="Pequeno"))->nd_zoo_2
+  scale_x_discrete(labels = c("Control" = "Contínuo",  "Large"="Grande",
+                              "Medium"="Médio", "Small"="Pequeno"))+
+  annotate(geom = "text", x=1, y=0.65, label="L)",
+           color="black")->nd_zoo_2
 
 #Juntando todos os graficos
 ggarrange(d_abio_0, d_abio_1, d_abio_2, d_zoo_0, d_zoo_1, d_zoo_2, nd_abio_0, nd_abio_1, nd_abio_2,
